@@ -128,3 +128,45 @@ def test_resultados_de_la_evaluacion(api, tmp_path, monkeypatch):
     assert detail["response"] == "10%"
     assert detail["case"]["question"].startswith("¿Cuál es el máximo")
     assert api.get("/eval/cases/no-existe").status_code == 404
+
+
+def _chunk(chunk_id, section, content="texto"):
+    return {
+        "chunk_id": chunk_id,
+        "doc_id": "guia",
+        "doc_type": "guide",
+        "ticker": None,
+        "section": section,
+        "page": None,
+        "as_of": None,
+        "source_url": "https://example.com/guia",
+        "content": content,
+    }
+
+
+def test_documentos(advisor, tmp_path, monkeypatch):
+    import asesoria.entrypoints.api as module
+
+    monkeypatch.setattr(module, "DATA", tmp_path)
+    (tmp_path / "raw").mkdir()
+    (tmp_path / "policies").mkdir()
+    (tmp_path / "raw" / "guia.html").write_text("<p>hola</p>", encoding="utf-8")
+    chunks = [_chunk("guia-p10", "B"), _chunk("guia-p2", "A")]
+    with TestClient(create_app(advisor=advisor, chunks=chunks)) as api:
+        docs = api.get("/documents").json()
+        assert docs == [
+            {
+                "doc_id": "guia",
+                "doc_type": "guide",
+                "ticker": None,
+                "source_url": "https://example.com/guia",
+                "chunks": 2,
+            }
+        ]
+        doc = api.get("/documents/guia").json()
+        # "p2" va antes que "p10"
+        assert [c["chunk_id"] for c in doc["chunks"]] == ["guia-p2", "guia-p10"]
+        assert doc["has_file"] is True
+        assert api.get("/documents/guia/file").text == "<p>hola</p>"
+        assert api.get("/documents/otro").status_code == 404
+        assert api.get("/documents/otro/file").status_code == 404

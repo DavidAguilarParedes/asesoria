@@ -91,6 +91,31 @@
   .dlg .actions button { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
   .dlg .actions .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* Documentos */
+  #docs main { max-width: 1180px; margin: 0 auto; padding: 16px 16px 48px; display: grid;
+               grid-template-columns: 290px minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 760px) { #docs main { grid-template-columns: minmax(0, 1fr); } }
+  .doclist { position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow-y: auto; }
+  @media (max-width: 760px) { .doclist { position: static; max-height: 260px; } }
+  .doclist h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 12px 0 4px; }
+  .doclist h3:first-child { margin-top: 0; }
+  .doclist button { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; border: 0;
+                    background: none; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 14px; color: var(--text); }
+  .doclist button:hover { background: var(--accent-soft); }
+  .doclist button.on { background: var(--accent); color: #fff; }
+  .doclist .n { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .doclist button.on .n { color: inherit; }
+  .dochead { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
+  .dochead h2 { font-size: 18px; margin: 0; word-break: break-all; }
+  #docs .sub { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  .sec { font-size: 13px; font-weight: 650; margin: 18px 0 6px; }
+  .chunk { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 6px 0;
+           white-space: pre-wrap; font-size: 14px; overflow-wrap: anywhere; }
+  .chunk .meta { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: var(--muted); margin-bottom: 4px; white-space: normal; }
+  .chunk.hit { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  mark { background: #fff1a8; color: inherit; }
+  .cite { color: var(--accent); cursor: pointer; text-decoration: underline dotted; }
   .chip { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
   .chip.bad { background: var(--no-soft); border-color: var(--no); color: var(--no); }
 </style>
@@ -100,6 +125,7 @@
   <h1>AsesorIA</h1>
   <nav class="tabs">
     <button id="tab-chat" class="on" type="button">Chat</button>
+    <button id="tab-docs" type="button">Documentos</button>
     <button id="tab-eval" type="button">Evaluación</button>
   </nav>
   <a id="mlflow-link" class="hidden" target="_blank" rel="noopener">Trazas en MLflow ↗</a>
@@ -119,6 +145,16 @@
       <button id="send">Enviar</button>
     </div>
   </form>
+</section>
+
+<!-- ===== Documentos ===== -->
+<section id="docs" class="hidden">
+  <main>
+    <aside class="panel doclist" id="doclist"><p class="empty">Cargando…</p></aside>
+    <div id="doc">
+      <p class="empty">Elige un documento para ver los fragmentos (chunks) que el agente puede encontrar al buscar.</p>
+    </div>
+  </main>
 </section>
 
 <!-- ===== Evaluación ===== -->
@@ -176,16 +212,16 @@ const fmt = (v) => (v === null || v === undefined ? "—" : Number(v).toFixed(2)
 
 /* ---------- Pestañas ---------- */
 let evalLoaded = false;
+const TABS = ["chat", "docs", "eval"];
 function show(tab) {
-  $("chat").classList.toggle("hidden", tab !== "chat");
-  $("eval").classList.toggle("hidden", tab !== "eval");
-  $("tab-chat").classList.toggle("on", tab === "chat");
-  $("tab-eval").classList.toggle("on", tab === "eval");
+  for (const t of TABS) {
+    $(t).classList.toggle("hidden", t !== tab);
+    $("tab-" + t).classList.toggle("on", t === tab);
+  }
   if (tab === "eval" && !evalLoaded) { evalLoaded = true; loadEval(); }
   if (tab === "chat") $("input").focus();
 }
-$("tab-chat").onclick = () => show("chat");
-$("tab-eval").onclick = () => show("eval");
+for (const t of TABS) $("tab-" + t).onclick = () => show(t);
 
 fetch("/config").then(r => r.json()).then(c => {
   if (c.mlflow_ui_url) { $("mlflow-link").href = c.mlflow_ui_url; $("mlflow-link").classList.remove("hidden"); }
@@ -248,7 +284,8 @@ function renderOrder(order) {
 
 function renderReply(reply) {
   sessionId = reply.session_id;
-  const box = el("div", "msg" + (reply.status === "blocked" ? " blocked" : ""), reply.text);
+  const box = el("div", "msg" + (reply.status === "blocked" ? " blocked" : ""));
+  box.append(linkCitations(reply.text));
   renderTools(box, reply);
   log.append(box);
   reply.pending.forEach(renderOrder);
@@ -405,7 +442,10 @@ async function openCase(caseId) {
       const args = Object.entries(call.arguments).filter(([, v]) => v !== null).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(", ");
       body.append(el("div", "call", `${call.tool}(${args})`));
     }
-    body.append(el("div", "lbl", "Respuesta del asesor"), el("div", "box", d.response || "(sin respuesta)"));
+    const answer = el("div", "box");
+    answer.append(linkCitations(d.response || "(sin respuesta)"));
+    answer.addEventListener("click", (ev) => { if (ev.target.classList.contains("cite")) $("detail").close(); });
+    body.append(el("div", "lbl", "Respuesta del asesor"), answer);
     if (d.rejection_reply !== null) body.append(el("div", "lbl", "Después de rechazar la orden"), el("div", "box", d.rejection_reply));
     body.append(el("div", "lbl", "Referencia"), el("div", "box", c.reference));
     const actions = el("div", "actions");
@@ -435,6 +475,142 @@ function renderAblation(data) {
               el("td", "num", `${s.p50_ms} ms`), el("td", "num", s.usd.toFixed(4)));
     t.append(tr);
   }
+}
+
+/* ---------- Documentos ---------- */
+const DOC_TYPES = {
+  policy: "Políticas internas", "10-K": "Reportes anuales 10-K", fact_sheet: "Fact sheets de ETFs",
+  summary_prospectus: "Prospectos de ETFs", guide: "Guías de la SEC",
+};
+let docs = [], currentDoc = null;
+
+async function loadDocs() {
+  try { docs = await getJson("/documents"); }
+  catch (e) { $("doclist").replaceChildren(el("p", "empty", "Error: " + e.message)); return; }
+  const list = $("doclist");
+  list.replaceChildren();
+  if (!docs.length) { list.append(el("p", "empty", "No hay documentos indexados.")); return; }
+  // Primero los tipos conocidos, en el orden de DOC_TYPES; luego cualquier otro
+  const types = [...new Set([...Object.keys(DOC_TYPES), ...docs.map(d => d.doc_type)])];
+  for (const type of types) {
+    const group = docs.filter(d => d.doc_type === type);
+    if (!group.length) continue;
+    list.append(el("h3", "", DOC_TYPES[type] || type));
+    for (const d of group) {
+      const b = el("button");
+      b.type = "button";
+      b.dataset.doc = d.doc_id;
+      b.append(el("span", "", d.doc_id), el("span", "n", d.chunks));
+      b.onclick = () => openDoc(d.doc_id);
+      list.append(b);
+    }
+  }
+}
+loadDocs();
+
+// Abre un documento; "cite" es el texto de una cita del chat para marcar el chunk citado
+async function openDoc(docId, cite = null) {
+  show("docs");
+  document.querySelectorAll(".doclist button").forEach(b => b.classList.toggle("on", b.dataset.doc === docId));
+  $("doc").replaceChildren(el("p", "empty", "Cargando…"));
+  try { currentDoc = await getJson(`/documents/${encodeURIComponent(docId)}`); }
+  catch (e) { $("doc").replaceChildren(el("p", "empty", "Error: " + e.message)); return; }
+  renderDoc(cite);
+}
+
+// La cita puede ser el id del chunk o "documento, sección, p. N"
+function findCited(chunks, cite) {
+  if (!cite) return null;
+  const exact = chunks.find(c => c.chunk_id === cite);
+  if (exact) return exact;
+  const page = cite.match(/p\. (\d+)/);
+  return chunks.find(c => c.section && cite.includes(c.section) && (!page || String(c.page) === page[1]))
+      || (page && chunks.find(c => String(c.page) === page[1])) || null;
+}
+
+function highlight(text, q) {
+  const frag = document.createDocumentFragment();
+  if (!q) { frag.append(text); return frag; }
+  const lower = text.toLowerCase();
+  let i = 0, j;
+  while ((j = lower.indexOf(q, i)) !== -1) {
+    frag.append(text.slice(i, j), el("mark", "", text.slice(j, j + q.length)));
+    i = j + q.length;
+  }
+  frag.append(text.slice(i));
+  return frag;
+}
+
+function renderDoc(cite = null) {
+  const d = currentDoc, box = $("doc");
+  box.replaceChildren();
+  const head = el("div", "dochead");
+  head.append(el("h2", "", d.doc_id));
+  if (d.source_url && d.source_url.startsWith("http")) {
+    head.append(Object.assign(el("a", "", "Fuente original ↗"), { href: d.source_url, target: "_blank", rel: "noopener" }));
+  }
+  if (d.has_file) {
+    head.append(Object.assign(el("a", "", "Archivo descargado ↗"), { href: `/documents/${encodeURIComponent(d.doc_id)}/file`, target: "_blank" }));
+  }
+  box.append(head);
+  const info = [DOC_TYPES[d.doc_type] || d.doc_type, d.ticker, `${d.chunks.length} chunks`].filter(Boolean).join(" · ");
+  box.append(el("p", "sub", info));
+
+  const filters = el("div", "filters");
+  const search = Object.assign(el("input"), { type: "search", placeholder: "Buscar dentro del documento…" });
+  const count = el("span", "sub");
+  filters.append(search, count);
+  box.append(filters);
+  const list = el("div");
+  box.append(list);
+
+  const cited = findCited(d.chunks, cite);
+  const draw = () => {
+    const q = search.value.trim().toLowerCase();
+    const rows = d.chunks.filter(c => !q || c.content.toLowerCase().includes(q) || (c.section || "").toLowerCase().includes(q));
+    count.textContent = q ? `${rows.length} de ${d.chunks.length} chunks` : "";
+    list.replaceChildren();
+    let section;
+    for (const c of rows) {
+      if (c.section !== section) { section = c.section; list.append(el("div", "sec", section || "Sin sección")); }
+      const meta = [c.chunk_id, c.page ? `p. ${c.page}` : null, c.as_of ? `al ${c.as_of}` : null].filter(Boolean).join(" · ");
+      const div = el("div", "chunk" + (c === cited ? " hit" : ""));
+      div.append(el("div", "meta", meta), highlight(c.content, q));
+      list.append(div);
+    }
+    if (!rows.length) list.append(el("p", "empty", "Ningún chunk contiene ese texto."));
+  };
+  search.oninput = draw;
+  draw();
+  const hit = list.querySelector(".chunk.hit");
+  if (hit) hit.scrollIntoView({ block: "center" });
+  else window.scrollTo(0, 0);
+}
+
+// Convierte las citas [doc-id…] de una respuesta en enlaces a la pestaña Documentos
+function linkCitations(text) {
+  const frag = document.createDocumentFragment();
+  const ids = docs.map(d => d.doc_id).sort((a, b) => b.length - a.length);
+  let last = 0;
+  for (const m of text.matchAll(/\[([^\]]+)\]/g)) {
+    frag.append(text.slice(last, m.index));
+    last = m.index + m[0].length;
+    // Una cita puede traer varias fuentes separadas por ";"
+    const parts = m[1].split(/;\s*/);
+    frag.append("[");
+    parts.forEach((part, i) => {
+      if (i) frag.append("; ");
+      const docId = ids.find(id => part.startsWith(id));
+      if (!docId) { frag.append(part); return; }
+      const link = el("span", "cite", part);
+      link.title = "Ver en Documentos";
+      link.onclick = () => openDoc(docId, part.trim());
+      frag.append(link);
+    });
+    frag.append("]");
+  }
+  frag.append(text.slice(last));
+  return frag;
 }
 
 // Markdown mínimo: títulos, listas, negrita y párrafos

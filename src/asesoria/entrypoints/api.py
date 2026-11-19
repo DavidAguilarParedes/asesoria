@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from collections import defaultdict
 from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
@@ -13,6 +14,15 @@ from asesoria.infrastructure.llm import BudgetExceeded
 
 STATIC = Path(__file__).parent / "static"
 RESULTS = Path("results")
+DATA = Path("data")
+
+
+def _local_file(doc_id: str) -> Path | None:
+    """Archivo descargado (data/raw) o política interna (data/policies) del documento."""
+    for folder in (DATA / "raw", DATA / "policies"):
+        for path in sorted(folder.glob(f"{doc_id}.*")):
+            return path
+    return None
 
 
 class ChatRequest(BaseModel):
@@ -46,6 +56,8 @@ async def lifespan(app: FastAPI):
         mcp = await stack.enter_async_context(c.alpaca()) if settings.api_use_mcp else None
         app.state.advisor = c.advisor(mcp=mcp)
         app.state.clients = c.clients()
+        # Los chunks indexados se leen una vez para la pestaña Documentos (son pocos)
+        app.state.chunks = c.store().payloads()
         try:
             yield
         finally:
@@ -53,10 +65,16 @@ async def lifespan(app: FastAPI):
             c.close()
 
 
-def create_app(advisor=None, clients=None) -> FastAPI:
+def _natural(chunk_id: str) -> list:
+    # Ordena "p2" antes que "p10": separa los números del texto
+    return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", chunk_id)]
+
+
+def create_app(advisor=None, clients=None, chunks=None) -> FastAPI:
     app = FastAPI(title="AsesorIA", lifespan=lifespan)
     app.state.advisor = advisor
     app.state.clients = clients
+    app.state.chunks = chunks or []
     # Evita que dos requests de la misma sesión corran a la vez (p. ej. doble clic en aprobar)
     locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
@@ -75,6 +93,56 @@ def create_app(advisor=None, clients=None) -> FastAPI:
     def list_clients(request: Request) -> list[dict]:
         repo = request.app.state.clients
         return [c.model_dump(mode="json") for c in repo.all()] if repo else []
+
+    # --- Documentos del corpus, tal como los ve el agente (chunks indexados) ---
+
+    def chunks_of(request: Request, doc_id: str) -> list[dict]:
+        rows = [c for c in request.app.state.chunks if c["doc_id"] == doc_id]
+        if not rows:
+            raise HTTPException(404, f"El documento {doc_id} no existe")
+        return sorted(rows, key=lambda c: _natural(c["chunk_id"]))
+
+    @app.get("/documents")
+    def list_documents(request: Request) -> list[dict]:
+        docs: dict[str, dict] = {}
+        for c in request.app.state.chunks:
+            doc = docs.setdefault(
+                c["doc_id"],
+                {
+                    "doc_id": c["doc_id"],
+                    "doc_type": c["doc_type"],
+                    "ticker": c.get("ticker"),
+                    "source_url": c.get("source_url"),
+                    "chunks": 0,
+                },
+            )
+            doc["chunks"] += 1
+        return sorted(docs.values(), key=lambda d: (d["doc_type"], d["doc_id"]))
+
+    @app.get("/documents/{doc_id}")
+    def get_document(doc_id: str, request: Request) -> dict:
+        rows = chunks_of(request, doc_id)
+        first = rows[0]
+        return {
+            "doc_id": doc_id,
+            "doc_type": first["doc_type"],
+            "ticker": first.get("ticker"),
+            "source_url": first.get("source_url"),
+            "has_file": _local_file(doc_id) is not None,
+            "chunks": [
+                {k: c.get(k) for k in ("chunk_id", "section", "page", "as_of", "content")}
+                for c in rows
+            ],
+        }
+
+    @app.get("/documents/{doc_id}/file", include_in_schema=False)
+    def document_file(doc_id: str, request: Request):
+        chunks_of(request, doc_id)  # solo se sirven documentos que existen en el índice
+        path = _local_file(doc_id)
+        if path is None:
+            raise HTTPException(404, f"No se encontró el archivo de {doc_id}")
+        media = "text/plain; charset=utf-8" if path.suffix == ".md" else None
+        return FileResponse(path, media_type=media, content_disposition_type="inline")
 
     # --- Resultados de la evaluación (los genera `asesoria eval` y `asesoria ablation`) ---
 
