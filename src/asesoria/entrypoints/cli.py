@@ -3,17 +3,21 @@ import typer
 app = typer.Typer(help="AsesorIA: agente asesor de inversiones (demo, no es asesoría real)")
 
 
+def _container():
+    from asesoria.bootstrap import Container
+    from asesoria.config import get_settings
+
+    return Container(get_settings())
+
+
 @app.command()
 def download(force: bool = False) -> None:
     """Descarga los documentos públicos del corpus a data/raw/."""
-    from asesoria import bootstrap
     from asesoria.application.ingest import download_corpus
-    from asesoria.config import get_settings
 
-    settings = get_settings()
-    sources = bootstrap.load_sources(settings)
-    fetch = bootstrap.make_fetcher(settings, force)
-    report = download_corpus(sources, fetch, settings.data_dir / "raw")
+    c = _container()
+    sources = c.sources()
+    report = download_corpus(sources, c.fetcher(force), c.settings.data_dir / "raw")
 
     typer.echo(f"Descargados: {len(report.ok)}/{len(sources)}")
     for doc in report.manual:
@@ -24,29 +28,31 @@ def download(force: bool = False) -> None:
 
 @app.command()
 def ingest(contextual: bool = False) -> None:
-    """Carga, chunkea e indexa el corpus en la base vectorial."""
-    from asesoria import bootstrap
-    from asesoria.application.ingest import build_chunks
-    from asesoria.config import get_settings
+    """Carga, chunkea e indexa el corpus. Con --contextual agrega Contextual Retrieval."""
+    from asesoria.application.ingest import add_context, load_units
 
-    if contextual:
-        typer.echo("El modo --contextual todavía no está implementado.")
-        raise typer.Exit(1)
-
-    settings = get_settings()
-    files = bootstrap.corpus_files(settings)
+    c = _container()
+    files = c.corpus_files()
     missing = [str(p) for _, p in files if not p.exists()]
     if missing:
         typer.echo("Faltan archivos, corre primero `asesoria download`:\n" + "\n".join(missing))
         raise typer.Exit(1)
 
-    chunks = build_chunks(files, bootstrap.loader_for, bootstrap.make_chunker())
-    vector_store = bootstrap.make_store(settings)
-    vector_store.reset()
-    kb = bootstrap.make_knowledge_base(settings, vector_store)
-    kb.index(chunks)
-    name = type(vector_store).__name__
-    typer.echo(f"Indexados {len(chunks)} chunks de {len(files)} documentos en {name}.")
+    units = load_units(files, c.loader_for)
+    chunks = c.chunker().split(units)
+    try:
+        if contextual:
+            chunks = add_context(chunks, units, c.contextualizer())
+        store = c.store(contextual)
+        store.reset()
+        kb = c.knowledge_base(contextual)
+        kb.index(chunks)
+    finally:
+        typer.echo(f"Costo LLM: {c.save_costs('ingest' + (' --contextual' if contextual else ''))}")
+
+    typer.echo(
+        f"Indexados {len(chunks)} chunks de {len(files)} documentos en {c.collection(contextual)}."
+    )
     typer.echo(f"Embeddings: {kb.dense.misses} nuevos, {kb.dense.hits} desde caché.")
 
 
@@ -55,20 +61,56 @@ def search(
     query: str,
     ticker: str | None = None,
     doc_type: str | None = None,
-    mode: str = "hybrid",
     k: int = 5,
+    mode: str = "hybrid",
+    contextual: bool = False,
+    rewrite: bool = False,
+    hyde: bool = False,
+    decompose: bool = False,
+    rerank: bool = False,
+    repack: str | None = None,
 ) -> None:
-    """Busca en la base de conocimiento (para probar a mano)."""
-    from asesoria import bootstrap
-    from asesoria.config import get_settings
+    """Busca en la base de conocimiento, con las capas que se elijan."""
+    from asesoria.bootstrap import RetrievalConfig
 
-    settings = get_settings()
-    kb = bootstrap.make_knowledge_base(settings)
-    retriever = bootstrap.make_retriever(kb, mode)
-    results = retriever.retrieve_context(query, {"ticker": ticker, "doc_type": doc_type}, k)
-    for i, c in enumerate(results, start=1):
-        preview = c.content[:160].replace("\n", " ")
-        typer.echo(f"{i}. [{c.score:.3f}] {c.chunk_id} · {c.section}\n   {preview}…")
+    c = _container()
+    cfg = RetrievalConfig(
+        mode=mode,
+        contextual=contextual,
+        rewrite=rewrite,
+        hyde=hyde,
+        decompose=decompose,
+        rerank=rerank,
+        repack=repack,
+    )
+    try:
+        results = c.retriever(cfg).retrieve_context(
+            query, {"ticker": ticker, "doc_type": doc_type}, k
+        )
+    finally:
+        cost = c.save_costs(f"search {cfg.label}")
+
+    typer.echo(f"Pipeline: {cfg.label}")
+    for i, chunk in enumerate(results, start=1):
+        score = chunk.rerank_score if chunk.rerank_score is not None else chunk.score
+        preview = chunk.content[:160].replace("\n", " ")
+        typer.echo(f"{i}. [{score:.3f}] {chunk.chunk_id} · {chunk.section}\n   {preview}…")
+    typer.echo(f"Costo LLM: {cost}")
+
+
+@app.command()
+def costs() -> None:
+    """Muestra el gasto acumulado registrado en logs/costs.jsonl."""
+    import json
+
+    from asesoria.bootstrap import COSTS_LOG
+
+    if not COSTS_LOG.exists():
+        typer.echo("Todavía no hay gastos registrados.")
+        return
+    rows = [json.loads(line) for line in COSTS_LOG.read_text().splitlines() if line]
+    total = sum(r["usd"] for r in rows)
+    typer.echo(f"{len(rows)} comandos · {sum(r['calls'] for r in rows)} llamadas · USD {total:.4f}")
 
 
 @app.command()

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from asesoria.domain.models import ProcessedChunk, SourceDoc, SparseVector
+from asesoria.domain.models import FilterSuggestion, ProcessedChunk, SourceDoc, SparseVector
 
 
 class Loader(ABC):
@@ -74,3 +74,33 @@ class VectorStore(ABC):
 class RetrievalStrategy(ABC):
     @abstractmethod
     def retrieve_context(self, query: str, filters: dict, k: int) -> list[ProcessedChunk]: ...
+
+
+class Reranker(ABC):
+    @abstractmethod
+    def score(self, query: str, texts: list[str]) -> list[float]: ...
+
+
+class QueryRewriter(ABC):
+    @abstractmethod
+    def rewrite(self, query: str) -> FilterSuggestion: ...
+
+
+class HypotheticalDocGenerator(ABC):
+    @abstractmethod
+    def generate(self, query: str) -> str: ...
+
+
+class QueryDecomposer(ABC):
+    @abstractmethod
+    def decompose(self, query: str) -> list[str]: ...
+
+
+class ContextCompressor(ABC):
+    @abstractmethod
+    def extract(self, query: str, text: str) -> str | None: ...
+
+
+class ChunkContextualizer(ABC):
+    @abstractmethod
+    def situate(self, document: str, chunk: ProcessedChunk) -> str: ...

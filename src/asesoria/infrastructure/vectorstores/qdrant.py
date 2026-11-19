@@ -34,8 +34,8 @@ def _rows(points) -> list[dict]:
 class QdrantStore(VectorStore):
     supports_sparse = True
 
-    def __init__(self, path: Path, collection: str, dim: int):
-        self.client = QdrantClient(path=str(path))
+    def __init__(self, path: Path, collection: str, dim: int, client: QdrantClient | None = None):
+        self.client = client or QdrantClient(path=str(path))
         self.collection = collection
         self.dim = dim
 

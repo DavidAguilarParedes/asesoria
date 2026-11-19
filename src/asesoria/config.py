@@ -9,8 +9,10 @@ class Settings(BaseSettings):
 
     llm_provider: str = "openai"
     openai_api_key: SecretStr | None = None
-    openai_chat_model: str = "gpt-4.1-mini"
+    openai_chat_model: str = "gpt-5-mini"
+    openai_fast_model: str = "gpt-5-nano"
     openai_embedding_model: str = "text-embedding-3-small"
+    max_usd_per_run: float = 0.30
 
     alpaca_api_key: SecretStr | None = None
     alpaca_secret_key: SecretStr | None = None

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from asesoria.domain.models import ProcessedChunk, SourceDoc
-from asesoria.domain.ports import ChunkingStrategy, Loader
+from asesoria.domain.ports import ChunkContextualizer, ChunkingStrategy, Loader
 
 
 @dataclass
@@ -28,12 +28,33 @@ def download_corpus(sources: list[SourceDoc], fetch, raw_dir: Path) -> DownloadR
     return report
 
 
+def load_units(
+    docs: list[tuple[SourceDoc, Path]], loader_for: Callable[[SourceDoc], Loader]
+) -> list[ProcessedChunk]:
+    units: list[ProcessedChunk] = []
+    for doc, path in docs:
+        units.extend(loader_for(doc).load(doc, path))
+    return units
+
+
 def build_chunks(
     docs: list[tuple[SourceDoc, Path]],
     loader_for: Callable[[SourceDoc], Loader],
     chunker: ChunkingStrategy,
 ) -> list[ProcessedChunk]:
-    units: list[ProcessedChunk] = []
-    for doc, path in docs:
-        units.extend(loader_for(doc).load(doc, path))
-    return chunker.split(units)
+    return chunker.split(load_units(docs, loader_for))
+
+
+def add_context(
+    chunks: list[ProcessedChunk],
+    units: list[ProcessedChunk],
+    contextualizer: ChunkContextualizer,
+) -> list[ProcessedChunk]:
+    """Contextual Retrieval: cada chunk recibe una frase que lo ubica en su sección."""
+    by_id = {u.chunk_id: u.content for u in units}
+    out = []
+    for chunk in chunks:
+        section = by_id.get(chunk.parent_id or "", chunk.content)
+        context = contextualizer.situate(section, chunk)
+        out.append(chunk.model_copy(update={"context": context}))
+    return out

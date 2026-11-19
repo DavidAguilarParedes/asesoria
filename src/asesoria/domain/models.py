@@ -49,6 +49,7 @@ class ProcessedChunk(BaseModel):
     as_of: date | None = None
     source_url: str | None = None
     context: str | None = None
+    parent_id: str | None = None
     dense_vector: list[float] | None = None
     sparse_vector: SparseVector | None = None
     score: float | None = None
@@ -86,3 +87,11 @@ class Order(BaseModel):
         if self.est_price_usd is None:
             return None
         return round(self.qty * self.est_price_usd, 2)
+
+
+class FilterSuggestion(BaseModel):
+    """Salida estructurada del query rewriting (clase 6 del curso)."""
+
+    rewritten_query: str
+    ticker: str | None = None
+    doc_type: DocType | None = None

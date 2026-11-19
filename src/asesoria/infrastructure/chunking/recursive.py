@@ -19,12 +19,16 @@ class RecursiveChunker(ChunkingStrategy):
         for unit in chunks:
             pieces = self._split_text(unit.content)
             if len(pieces) == 1:
-                out.append(unit)
+                out.append(unit.model_copy(update={"parent_id": unit.chunk_id}))
                 continue
             for i, piece in enumerate(pieces, start=1):
                 out.append(
                     unit.model_copy(
-                        update={"chunk_id": f"{unit.chunk_id}-{i:02d}", "content": piece}
+                        update={
+                            "chunk_id": f"{unit.chunk_id}-{i:02d}",
+                            "content": piece,
+                            "parent_id": unit.chunk_id,
+                        }
                     )
                 )
         return out
