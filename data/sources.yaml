@@ -55,10 +55,9 @@
 - id: sec-asset-allocation
   doc_type: guide
   url: https://www.sec.gov/investor/pubs/assetallocation.htm
-- id: investorgov-risk-tolerance
+- id: sec-saving-investing-roadmap
   doc_type: guide
-  url: https://www.investor.gov/introduction-investing/getting-started/assessing-your-risk-tolerance
-  manual: true  # investor.gov bloquea descargas automáticas; se guarda a mano en data/raw/
+  url: https://www.sec.gov/investor/pubs/sec-guide-to-savings-and-investing.pdf
 - id: sec-corporate-bonds
   doc_type: guide
   url: https://www.sec.gov/files/ib_corporatebonds.pdf
