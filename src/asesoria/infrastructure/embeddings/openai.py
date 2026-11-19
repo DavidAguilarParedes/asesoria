@@ -9,7 +9,7 @@ class OpenAIEmbedder(Embedder):
         self.model = model
         self.batch_size = batch_size
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
         vectors: list[list[float]] = []
         for i in range(0, len(texts), self.batch_size):
             batch = texts[i : i + self.batch_size]

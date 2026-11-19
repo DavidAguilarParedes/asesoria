@@ -24,7 +24,7 @@ def download(force: bool = False) -> None:
 
 @app.command()
 def ingest(contextual: bool = False) -> None:
-    """Carga, chunkea e indexa el corpus en Qdrant."""
+    """Carga, chunkea e indexa el corpus en la base vectorial."""
     from asesoria import bootstrap
     from asesoria.application.ingest import build_chunks
     from asesoria.config import get_settings
@@ -41,11 +41,12 @@ def ingest(contextual: bool = False) -> None:
         raise typer.Exit(1)
 
     chunks = build_chunks(files, bootstrap.loader_for, bootstrap.make_chunker())
-    store = bootstrap.make_store(settings)
-    store.reset()
-    kb = bootstrap.make_knowledge_base(settings, store)
+    vector_store = bootstrap.make_store(settings)
+    vector_store.reset()
+    kb = bootstrap.make_knowledge_base(settings, vector_store)
     kb.index(chunks)
-    typer.echo(f"Indexados {len(chunks)} chunks de {len(files)} documentos.")
+    name = type(vector_store).__name__
+    typer.echo(f"Indexados {len(chunks)} chunks de {len(files)} documentos en {name}.")
     typer.echo(f"Embeddings: {kb.dense.misses} nuevos, {kb.dense.hits} desde caché.")
 
 
@@ -62,8 +63,9 @@ def search(
     from asesoria.config import get_settings
 
     settings = get_settings()
-    retriever = bootstrap.make_retriever(bootstrap.make_knowledge_base(settings), mode)
-    results = retriever.retrieve(query, {"ticker": ticker, "doc_type": doc_type}, k)
+    kb = bootstrap.make_knowledge_base(settings)
+    retriever = bootstrap.make_retriever(kb, mode)
+    results = retriever.retrieve_context(query, {"ticker": ticker, "doc_type": doc_type}, k)
     for i, c in enumerate(results, start=1):
         preview = c.content[:160].replace("\n", " ")
         typer.echo(f"{i}. [{c.score:.3f}] {c.chunk_id} · {c.section}\n   {preview}…")

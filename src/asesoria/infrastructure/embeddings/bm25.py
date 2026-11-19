@@ -10,12 +10,12 @@ class BM25Embedder(SparseEmbedder):
     def __init__(self, model_name: str = "Qdrant/bm25"):
         self.model = SparseTextEmbedding(model_name=model_name)
 
-    def embed(self, texts: list[str]) -> list[SparseVector]:
+    def embed_texts(self, texts: list[str]) -> list[SparseVector]:
         return [
             SparseVector(indices=e.indices.tolist(), values=e.values.tolist())
             for e in self.model.embed(texts)
         ]
 
-    def embed_query(self, text: str) -> SparseVector:
-        e = next(iter(self.model.query_embed(text)))
+    def embed_query(self, query: str) -> SparseVector:
+        e = next(iter(self.model.query_embed(query)))
         return SparseVector(indices=e.indices.tolist(), values=e.values.tolist())

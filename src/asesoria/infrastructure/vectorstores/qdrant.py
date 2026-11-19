@@ -3,12 +3,10 @@ from pathlib import Path
 
 from qdrant_client import QdrantClient, models
 
-from asesoria.domain.models import ProcessedChunk, SparseVector
-from asesoria.domain.ports import VectorStore
+from asesoria.domain.ports import Sparse, VectorStore
 
 DENSE = "dense"
 SPARSE = "bm25"
-PAYLOAD_EXCLUDE = {"dense_vector", "sparse_vector", "score", "rerank_score"}
 
 
 def _point_id(chunk_id: str) -> str:
@@ -24,11 +22,18 @@ def _filter(filters: dict) -> models.Filter | None:
     return models.Filter(must=conditions) if conditions else None
 
 
-def _sparse(vector: SparseVector) -> models.SparseVector:
-    return models.SparseVector(indices=vector.indices, values=vector.values)
+def _sparse(vector: Sparse) -> models.SparseVector:
+    indices, values = vector
+    return models.SparseVector(indices=indices, values=values)
+
+
+def _rows(points) -> list[dict]:
+    return [{**p.payload, "score": p.score} for p in points]
 
 
 class QdrantStore(VectorStore):
+    supports_sparse = True
+
     def __init__(self, path: Path, collection: str, dim: int):
         self.client = QdrantClient(path=str(path))
         self.collection = collection
@@ -45,25 +50,23 @@ class QdrantStore(VectorStore):
             sparse_vectors_config={SPARSE: models.SparseVectorParams(modifier=models.Modifier.IDF)},
         )
 
-    def index(self, chunks: list[ProcessedChunk]) -> None:
-        points = [
-            models.PointStruct(
-                id=_point_id(c.chunk_id),
-                vector={DENSE: c.dense_vector, SPARSE: _sparse(c.sparse_vector)},
-                payload=c.model_dump(mode="json", exclude=PAYLOAD_EXCLUDE),
+    def index(self, ids, dense, sparse, payloads) -> None:
+        sparse = sparse or [None] * len(ids)
+        points = []
+        for chunk_id, d, s, payload in zip(ids, dense, sparse, payloads, strict=True):
+            vector = {DENSE: d}
+            if s is not None:
+                vector[SPARSE] = _sparse(s)
+            points.append(
+                models.PointStruct(id=_point_id(chunk_id), vector=vector, payload=payload)
             )
-            for c in chunks
-        ]
         self.client.upload_points(self.collection, points=points, batch_size=128)
-
-    def _to_chunks(self, points) -> list[ProcessedChunk]:
-        return [ProcessedChunk(**p.payload, score=p.score) for p in points]
 
     def search_dense(self, vector, filters, k):
         res = self.client.query_points(
             self.collection, query=vector, using=DENSE, query_filter=_filter(filters), limit=k
         )
-        return self._to_chunks(res.points)
+        return _rows(res.points)
 
     def search_sparse(self, vector, filters, k):
         res = self.client.query_points(
@@ -73,7 +76,7 @@ class QdrantStore(VectorStore):
             query_filter=_filter(filters),
             limit=k,
         )
-        return self._to_chunks(res.points)
+        return _rows(res.points)
 
     def search_hybrid(self, dense, sparse, filters, k):
         flt = _filter(filters)
@@ -86,4 +89,4 @@ class QdrantStore(VectorStore):
             query=models.FusionQuery(fusion=models.Fusion.RRF),
             limit=k,
         )
-        return self._to_chunks(res.points)
+        return _rows(res.points)

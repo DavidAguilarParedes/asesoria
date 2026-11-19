@@ -21,7 +21,7 @@ class CachingEmbedder(Embedder):
     def _key(self, text: str) -> str:
         return hashlib.sha256(f"{self.namespace}|{text}".encode()).hexdigest()
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
         keys = [self._key(t) for t in texts]
         found: dict[str, list[float]] = {}
         for i in range(0, len(keys), 500):
@@ -34,7 +34,7 @@ class CachingEmbedder(Embedder):
         self.hits += len(texts) - len(missing)
         self.misses += len(missing)
         if missing:
-            vectors = self.inner.embed([t for _, t in missing])
+            vectors = self.inner.embed_texts([t for _, t in missing])
             rows = [(k, json.dumps(v)) for (k, _), v in zip(missing, vectors, strict=True)]
             self.db.executemany("INSERT OR REPLACE INTO emb VALUES (?, ?)", rows)
             self.db.commit()

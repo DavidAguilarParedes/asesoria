@@ -15,35 +15,62 @@ class ChunkingStrategy(ABC):
 
 
 class Embedder(ABC):
+    """Adapter: traduce los chunks Pydantic al formato que espera cada modelo."""
+
     @abstractmethod
-    def embed(self, texts: list[str]) -> list[list[float]]: ...
+    def embed_texts(self, texts: list[str]) -> list[list[float]]: ...
+
+    def embed_chunks(self, chunks: list[ProcessedChunk]) -> list[list[float]]:
+        return self.embed_texts([c.embedding_text for c in chunks])
+
+    def embed_query(self, query: str) -> list[float]:
+        return self.embed_texts([query])[0]
 
 
 class SparseEmbedder(ABC):
     @abstractmethod
-    def embed(self, texts: list[str]) -> list[SparseVector]: ...
+    def embed_texts(self, texts: list[str]) -> list[SparseVector]: ...
+
+    def embed_chunks(self, chunks: list[ProcessedChunk]) -> list[SparseVector]:
+        return self.embed_texts([c.embedding_text for c in chunks])
+
+    def embed_query(self, query: str) -> SparseVector:
+        return self.embed_texts([query])[0]
+
+
+# Vector disperso en formato primitivo: (índices, valores)
+Sparse = tuple[list[int], list[float]]
 
 
 class VectorStore(ABC):
-    """Implementación de la base vectorial (lado "cómo" del Bridge)."""
+    """Lado "cómo" del Bridge. Solo recibe y devuelve datos primitivos, no conoce Pydantic."""
+
+    supports_sparse: bool = False
 
     @abstractmethod
-    def index(self, chunks: list[ProcessedChunk]) -> None: ...
+    def reset(self) -> None: ...
 
     @abstractmethod
-    def search_dense(self, vector: list[float], filters: dict, k: int) -> list[ProcessedChunk]: ...
+    def index(
+        self,
+        ids: list[str],
+        dense: list[list[float]],
+        sparse: list[Sparse] | None,
+        payloads: list[dict],
+    ) -> None: ...
 
     @abstractmethod
-    def search_sparse(
-        self, vector: SparseVector, filters: dict, k: int
-    ) -> list[ProcessedChunk]: ...
+    def search_dense(self, vector: list[float], filters: dict, k: int) -> list[dict]: ...
 
-    @abstractmethod
+    def search_sparse(self, vector: Sparse, filters: dict, k: int) -> list[dict]:
+        raise NotImplementedError(f"{type(self).__name__} no soporta búsqueda sparse")
+
     def search_hybrid(
-        self, dense: list[float], sparse: SparseVector, filters: dict, k: int
-    ) -> list[ProcessedChunk]: ...
+        self, dense: list[float], sparse: Sparse, filters: dict, k: int
+    ) -> list[dict]:
+        raise NotImplementedError(f"{type(self).__name__} no soporta búsqueda híbrida")
 
 
 class RetrievalStrategy(ABC):
     @abstractmethod
-    def retrieve(self, query: str, filters: dict, k: int) -> list[ProcessedChunk]: ...
+    def retrieve_context(self, query: str, filters: dict, k: int) -> list[ProcessedChunk]: ...

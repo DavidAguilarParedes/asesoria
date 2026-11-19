@@ -4,10 +4,14 @@ from pathlib import Path
 from openai import OpenAI
 
 from asesoria.application.retrieval.knowledge_base import KnowledgeBase
-from asesoria.application.retrieval.strategies import DenseSearch, HybridSearch, SparseSearch
+from asesoria.application.retrieval.strategies import (
+    HybridSearchStrategy,
+    SemanticSearchStrategy,
+    SparseSearchStrategy,
+)
 from asesoria.config import Settings
 from asesoria.domain.models import SourceDoc
-from asesoria.domain.ports import RetrievalStrategy
+from asesoria.domain.ports import RetrievalStrategy, VectorStore
 from asesoria.infrastructure import downloader, policies
 from asesoria.infrastructure.chunking.recursive import RecursiveChunker
 from asesoria.infrastructure.embeddings.bm25 import BM25Embedder
@@ -44,22 +48,28 @@ def make_openai(settings: Settings) -> OpenAI:
     return OpenAI(api_key=settings.openai_api_key.get_secret_value())
 
 
-def make_store(settings: Settings) -> QdrantStore:
+def make_store(settings: Settings) -> VectorStore:
     dim = EMBEDDING_DIMS[settings.openai_embedding_model]
     return QdrantStore(settings.qdrant_path, settings.collection, dim)
 
 
-def make_knowledge_base(settings: Settings, store: QdrantStore | None = None) -> KnowledgeBase:
+def make_knowledge_base(settings: Settings, store: VectorStore | None = None) -> KnowledgeBase:
     dense = CachingEmbedder(
         OpenAIEmbedder(make_openai(settings), settings.openai_embedding_model),
         cache_path=Path(".cache/embeddings.sqlite"),
         namespace=settings.openai_embedding_model,
     )
-    return KnowledgeBase(dense, BM25Embedder(), store or make_store(settings))
+    store = store or make_store(settings)
+    sparse = BM25Embedder() if store.supports_sparse else None
+    return KnowledgeBase(dense, store, sparse)
 
 
 def make_retriever(kb: KnowledgeBase, mode: str = "hybrid") -> RetrievalStrategy:
-    strategies = {"dense": DenseSearch, "sparse": SparseSearch, "hybrid": HybridSearch}
+    strategies = {
+        "dense": SemanticSearchStrategy,
+        "sparse": SparseSearchStrategy,
+        "hybrid": HybridSearchStrategy,
+    }
     return strategies[mode](kb)
 
 
