@@ -18,6 +18,18 @@ class RiskProfile(StrEnum):
     AGGRESSIVE = "agresivo"
 
 
+class SourceDoc(BaseModel):
+    id: str
+    doc_type: DocType
+    url: str
+    ticker: str | None = None
+    manual: bool = False
+
+    @property
+    def extension(self) -> str:
+        return ".pdf" if self.url.lower().endswith(".pdf") else ".html"
+
+
 class ProcessedChunk(BaseModel):
     chunk_id: str
     content: str

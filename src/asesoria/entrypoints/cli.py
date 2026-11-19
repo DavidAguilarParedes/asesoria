@@ -4,6 +4,25 @@ app = typer.Typer(help="AsesorIA: agente asesor de inversiones (demo, no es ases
 
 
 @app.command()
+def download(force: bool = False) -> None:
+    """Descarga los documentos públicos del corpus a data/raw/."""
+    from asesoria import bootstrap
+    from asesoria.application.ingest import download_corpus
+    from asesoria.config import get_settings
+
+    settings = get_settings()
+    sources = bootstrap.load_sources(settings)
+    fetch = bootstrap.make_fetcher(settings, force)
+    report = download_corpus(sources, fetch, settings.data_dir / "raw")
+
+    typer.echo(f"Descargados: {len(report.ok)}/{len(sources)}")
+    for doc in report.manual:
+        typer.echo(f"Manual: guarda {doc.url} como data/raw/{doc.id}{doc.extension}")
+    for doc_id, error in report.failed.items():
+        typer.echo(f"Error en {doc_id}: {error}")
+
+
+@app.command()
 def ingest(contextual: bool = False) -> None:
     """Descarga e indexa el corpus."""
     typer.echo(f"ingest (contextual={contextual}): pendiente")

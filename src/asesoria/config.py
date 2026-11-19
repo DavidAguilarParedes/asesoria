@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     alpaca_secret_key: SecretStr | None = None
     alpaca_paper_trade: bool = True
 
+    # La SEC pide un User-Agent con nombre y correo de contacto
+    sec_user_agent: str = "asesoria-demo"
+
     qdrant_path: Path = Path(".qdrant")
     collection: str = "asesoria"
     data_dir: Path = Path("data")
