@@ -25,10 +25,17 @@ class Settings(BaseSettings):
     # La API abre el MCP de Alpaca al arrancar; en false responde sin acceso al mercado
     api_use_mcp: bool = True
 
+    # MLflow (opcional): trazas de cada conversación y registro de las evaluaciones
+    mlflow_tracking_uri: str | None = None
+    # Dirección de MLflow para el navegador (en Docker difiere de la interna)
+    mlflow_ui_url: str = "http://localhost:5000"
+
     # La SEC pide un User-Agent con nombre y correo de contacto
     sec_user_agent: str = "asesoria-demo"
 
     qdrant_path: Path = Path(".qdrant")
+    # Si se define, se usa un servidor Qdrant (Docker) en vez de la carpeta local
+    qdrant_url: str | None = None
     collection: str = "asesoria"
     data_dir: Path = Path("data")
 

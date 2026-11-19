@@ -57,6 +57,23 @@ def ingest(contextual: bool = False) -> None:
 
 
 @app.command()
+def init() -> None:
+    """Deja la base lista: descarga los documentos e indexa solo si la colección está vacía."""
+    c = _container()
+    try:
+        store = c.store()
+        ready = store.client.collection_exists(store.collection)
+        count = store.client.count(store.collection).count if ready else 0
+    finally:
+        c.close()
+    if count:
+        typer.echo(f"La colección {c.collection(False)} ya tiene {count} chunks.")
+        return
+    download()
+    ingest()
+
+
+@app.command()
 def search(
     query: str,
     ticker: str | None = None,
@@ -128,7 +145,10 @@ async def _session(client: str | None, use_mcp: bool):
     """Abre el MCP de Alpaca (si se pide) y devuelve el contenedor y el asesor."""
     from contextlib import AsyncExitStack
 
+    from asesoria.infrastructure.observability import setup_tracing
+
     c = _container()
+    setup_tracing(c.settings)
     stack = AsyncExitStack()
     mcp = await stack.enter_async_context(c.alpaca()) if use_mcp else None
     advisor = c.advisor(mcp=mcp)
@@ -140,6 +160,8 @@ def ask(message: str, client: str | None = "c-002", tools: bool = True, mcp: boo
     """Hace una sola pregunta. Si el agente propone una orden, queda sin ejecutar."""
     import asyncio
 
+    from asesoria.infrastructure.observability import flush
+
     async def run():
         c, advisor, stack = await _session(client, mcp)
         try:
@@ -150,6 +172,7 @@ def ask(message: str, client: str | None = "c-002", tools: bool = True, mcp: boo
                 typer.echo("(con `ask` las órdenes no se ejecutan; usa `chat` para confirmarlas)")
         finally:
             await stack.aclose()
+            flush()
             typer.echo(f"Costo: {c.save_costs('ask')}")
             c.close()
 
@@ -160,6 +183,8 @@ def ask(message: str, client: str | None = "c-002", tools: bool = True, mcp: boo
 def chat(client: str | None = "c-002", tools: bool = True, mcp: bool = True) -> None:
     """Conversación en la terminal. Escribe 'salir' para terminar."""
     import asyncio
+
+    from asesoria.infrastructure.observability import flush
 
     async def run():
         c, advisor, stack = await _session(client, mcp)
@@ -179,6 +204,7 @@ def chat(client: str | None = "c-002", tools: bool = True, mcp: bool = True) -> 
                     _print_reply(reply, tools)
         finally:
             await stack.aclose()
+            flush()
             typer.echo(f"Costo de la sesión: {c.save_costs('chat')}")
             c.close()
 

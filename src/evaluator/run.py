@@ -13,6 +13,7 @@ import csv
 import json
 import time
 from collections import defaultdict
+from datetime import datetime
 
 from langchain_core.callbacks import get_usage_metadata_callback
 from pydantic import BaseModel
@@ -21,10 +22,12 @@ from asesoria.application.prompts import DISCLAIMER
 from asesoria.bootstrap import Container
 from asesoria.domain.models import ProcessedChunk
 from asesoria.infrastructure.llm import BudgetExceeded
+from asesoria.infrastructure.observability import flush, setup_tracing
 from evaluator import judge
 from evaluator.ablation import OUT
 from evaluator.dataset import GoldenCase, load_golden
 from evaluator.metrics import first_relevant_rank, percentile
+from evaluator.tracking import log_run
 
 RUNS = OUT / "eval_runs.json"
 # El juez es de otra familia que el asesor (gpt-5-mini) para evitar que un modelo
@@ -381,7 +384,10 @@ def main(
         runs = [CaseRun(**r) for r in json.loads(RUNS.read_text())]
         log(f"Uso las conversaciones guardadas en {RUNS}")
     else:
+        # Cada conversación de la evaluación queda como traza en MLflow
+        setup_tracing(container.settings, "asesoria-evaluacion")
         runs = asyncio.run(run_all(container, cases, log))
+        flush()
         OUT.mkdir(exist_ok=True)
         RUNS.write_text(json.dumps([r.model_dump() for r in runs], indent=1, ensure_ascii=False))
     runs_by_id = {r.case_id: r for r in runs}
@@ -429,6 +435,32 @@ def main(
     (OUT / "analisis.md").write_text(analysis)
 
     total = summary["total"]
+    metrics = dict(total)
+    for key in ("por_source", "por_hops"):
+        for group, values in summary[key].items():
+            metrics |= {f"{group}.{name}": v for name, v in values.items() if name in AGENT_METRICS}
+    log_run(
+        container.settings.mlflow_tracking_uri,
+        "asesoria-evaluacion",
+        f"eval {datetime.now():%Y-%m-%d %H:%M}",
+        params={
+            "asesor": container.settings.openai_chat_model,
+            "juez": judge_model,
+            "juez_goal_accuracy": GOAL_JUDGE,
+            "recuperacion": container.agent_retrieval().label,
+            "casos": len(cases),
+            "reuse": reuse,
+            "only": ",".join(only or []),
+        },
+        metrics=metrics,
+        artifacts=[
+            OUT / "eval.json",
+            OUT / "eval_cases.csv",
+            OUT / "eval_summary.csv",
+            OUT / "analisis.md",
+        ],
+        log=log,
+    )
     log("\nAgente evaluador (LLM-as-a-judge):")
     for name in AGENT_METRICS:
         log(f"  {name:<20} {total[name]}  (n={total[f'n_{name}']})")

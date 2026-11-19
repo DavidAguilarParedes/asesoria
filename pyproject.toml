@@ -43,6 +43,10 @@ eval = [
     "pillow>=10.4.0",
     "rapidfuzz>=3.0",
 ]
+tracking = [
+    "mlflow-skinny==3.17.2",
+    "opentelemetry-exporter-otlp-proto-http==1.45.2",
+]
 
 [build-system]
 requires = ["hatchling"]

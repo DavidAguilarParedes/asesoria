@@ -52,6 +52,10 @@ def alpaca_mcp(settings: Settings) -> MCPStdioTool:
         "FASTMCP_LOG_LEVEL": "ERROR",
         "FASTMCP_CHECK_FOR_UPDATES": "off",
     }
+    # En Docker, uvx encuentra el servidor ya descargado en la imagen gracias a UV_CACHE_DIR
+    for name in ("UV_CACHE_DIR", "UV_PYTHON_INSTALL_DIR", "UV_TOOL_DIR"):
+        if name in os.environ:
+            env[name] = os.environ[name]
     return MCPStdioTool(
         name="alpaca",
         command="uvx",

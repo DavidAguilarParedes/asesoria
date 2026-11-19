@@ -1,0 +1,44 @@
+# docker compose up  →  asesor en http://localhost:8000 y MLflow en http://localhost:5000
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_UI_URL: http://localhost:5000
+    # Corre con tu usuario para que los archivos generados no queden como root
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./data:/app/data          # documentos descargados y set de evaluación
+      - ./.cache:/app/.cache      # caché de embeddings y LLM (evita pagar dos veces)
+      - ./results:/app/results    # métricas exportadas
+      - ./logs:/app/logs          # trazas JSONL de tools, modelo y costos
+    depends_on:
+      - qdrant
+      - mlflow
+
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.17.2
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+      --allowed-hosts mlflow:5000,localhost:5000,127.0.0.1:5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+
+volumes:
+  qdrant-data:
+  mlflow-data:

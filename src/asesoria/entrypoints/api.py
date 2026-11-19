@@ -1,4 +1,5 @@
 import asyncio
+import json
 from collections import defaultdict
 from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
@@ -11,6 +12,7 @@ from asesoria.application.advisor import AdvisorReply
 from asesoria.infrastructure.llm import BudgetExceeded
 
 STATIC = Path(__file__).parent / "static"
+RESULTS = Path("results")
 
 
 class ChatRequest(BaseModel):
@@ -34,8 +36,10 @@ async def lifespan(app: FastAPI):
 
     from asesoria.bootstrap import Container
     from asesoria.config import get_settings
+    from asesoria.infrastructure.observability import setup_tracing
 
     settings = get_settings()
+    setup_tracing(settings)
     c = Container(settings)
     async with AsyncExitStack() as stack:
         # El servidor de Alpaca se abre una vez y lo comparten todas las sesiones
@@ -71,6 +75,57 @@ def create_app(advisor=None, clients=None) -> FastAPI:
     def list_clients(request: Request) -> list[dict]:
         repo = request.app.state.clients
         return [c.model_dump(mode="json") for c in repo.all()] if repo else []
+
+    # --- Resultados de la evaluación (los genera `asesoria eval` y `asesoria ablation`) ---
+
+    def read_json(name: str):
+        path = RESULTS / name
+        if not path.exists():
+            raise HTTPException(404, f"Todavía no existe {path}; corre la evaluación primero")
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    @app.get("/config")
+    def config() -> dict:
+        from asesoria.config import get_settings
+
+        settings = get_settings()
+        return {"mlflow_ui_url": settings.mlflow_ui_url if settings.mlflow_tracking_uri else None}
+
+    @app.get("/eval")
+    def evaluation() -> dict:
+        return read_json("eval.json")
+
+    @app.get("/eval/cases/{case_id}")
+    def evaluation_case(case_id: str) -> dict:
+        from evaluator.dataset import load_golden
+
+        case = next((c for c in load_golden() if c.id == case_id), None)
+        row = next((r for r in read_json("eval.json")["cases"] if r["case_id"] == case_id), None)
+        run = next((r for r in read_json("eval_runs.json") if r["case_id"] == case_id), None)
+        if case is None or row is None or run is None:
+            raise HTTPException(404, f"El caso {case_id} no existe")
+        calls = [
+            {"tool": c["tool"], "arguments": c["arguments"], "result": c["result"][:600]}
+            for c in run["calls"]
+        ]
+        return {
+            "case": case.model_dump(),
+            "scores": row,
+            "response": run["response"],
+            "rejection_reply": run["rejection_reply"],
+            "calls": calls,
+        }
+
+    @app.get("/ablation")
+    def ablation() -> dict:
+        return read_json("ablation.json")
+
+    @app.get("/analysis")
+    def analysis() -> dict:
+        path = RESULTS / "analisis.md"
+        if not path.exists():
+            raise HTTPException(404, "Todavía no existe el análisis")
+        return {"markdown": path.read_text(encoding="utf-8")}
 
     @app.post("/chat")
     async def chat(body: ChatRequest, request: Request) -> AdvisorReply:

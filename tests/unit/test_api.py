@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -99,3 +100,31 @@ def test_clientes_y_pagina(api):
     ids = [c["client_id"] for c in api.get("/clients").json()]
     assert ids == ["c-001", "c-002", "c-003"]
     assert "AsesorIA" in api.get("/").text
+
+
+def test_resultados_de_la_evaluacion(api, tmp_path, monkeypatch):
+    import asesoria.entrypoints.api as module
+
+    monkeypatch.setattr(module, "RESULTS", tmp_path)
+    assert api.get("/eval").status_code == 404
+
+    (tmp_path / "eval.json").write_text(
+        json.dumps({"summary": {"total": {}}, "cases": [{"case_id": "pol-01", "hit": True}]})
+    )
+    (tmp_path / "eval_runs.json").write_text(
+        json.dumps(
+            [
+                {
+                    "case_id": "pol-01",
+                    "response": "10%",
+                    "rejection_reply": None,
+                    "calls": [{"tool": "buscar_documentos", "arguments": {}, "result": "x"}],
+                }
+            ]
+        )
+    )
+    assert api.get("/eval").json()["cases"][0]["case_id"] == "pol-01"
+    detail = api.get("/eval/cases/pol-01").json()
+    assert detail["response"] == "10%"
+    assert detail["case"]["question"].startswith("¿Cuál es el máximo")
+    assert api.get("/eval/cases/no-existe").status_code == 404

@@ -11,6 +11,7 @@ from asesoria.bootstrap import Container, RetrievalConfig
 from asesoria.domain.models import ProcessedChunk
 from evaluator.dataset import GoldenCase, load_golden
 from evaluator.metrics import first_relevant_rank, matches, percentile, recall_at_k
+from evaluator.tracking import log_run
 
 K = 5
 OUT = Path("results")
@@ -154,6 +155,14 @@ def main(container: Container, only: str | None = None, log=print) -> None:
         }
         summary = summarize(cfg, results, cost)
         summaries.append(summary)
+        log_run(
+            container.settings.mlflow_tracking_uri,
+            "asesoria-ablacion",
+            cfg.label,
+            params=cfg.model_dump(),
+            metrics=summary,
+            log=log,
+        )
         all_results += results
         log(
             f"{cfg.label:<28} hit@5 {summary['hit@5']:.2f}  mrr {summary['mrr@5']:.2f}  "

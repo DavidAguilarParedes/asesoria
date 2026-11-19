@@ -114,6 +114,10 @@ class Container:
         if name not in self._stores:
             if self._stores:
                 client = next(iter(self._stores.values())).client
+            elif self.settings.qdrant_url:
+                from qdrant_client import QdrantClient
+
+                client = QdrantClient(url=self.settings.qdrant_url)
             else:
                 client = None
             dim = EMBEDDING_DIMS[self.settings.openai_embedding_model]
