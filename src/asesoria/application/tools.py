@@ -75,6 +75,9 @@ def build_tools(
                     "hint": f"Instrumentos con documentos: {', '.join(approved)}",
                 }
             )
+        # Las guías y las políticas no tienen ticker: con ese filtro nunca aparecerían
+        if tipo_documento in ("guide", "policy"):
+            ticker = None
         filters = {"ticker": ticker.upper() if ticker else None, "doc_type": tipo_documento}
         chunks = retriever.retrieve_context(consulta, filters, k)
 

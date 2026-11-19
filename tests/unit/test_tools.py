@@ -63,6 +63,12 @@ def test_search_keeps_only_results_above_threshold_and_truncates():
     assert len(out["resultados"][0]["texto"].split()) <= 181
 
 
+def test_search_ignores_ticker_for_guides_and_policies():
+    tools, retriever = tools_by_name()
+    call(tools["buscar_documentos"], consulta="bond prices", ticker="TLT", tipo_documento="guide")
+    assert retriever.last_filters == {"ticker": None, "doc_type": "guide"}
+
+
 def test_search_without_evidence_tells_agent_to_abstain():
     tools, _ = tools_by_name(scores=(-4.0, -6.0))
     out = call(tools["buscar_documentos"], consulta="anything")

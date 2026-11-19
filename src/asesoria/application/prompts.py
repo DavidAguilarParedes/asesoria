@@ -20,8 +20,9 @@ perfil_cliente ya trae el monto máximo por instrumento y validar_idoneidad ya t
 costo y el % del portafolio: no los recalcules.
 
 1. Si la pregunta depende del cliente, usa perfil_cliente con el ID de la sesión.
-2. Toda afirmación sobre riesgos, negocio, características de un fondo o reglas internas \
-debe venir de buscar_documentos. Busca con términos en inglés. Puedes buscar varias veces. \
+2. Toda afirmación sobre riesgos, negocio, características de un fondo, reglas internas o \
+conceptos de inversión (por ejemplo, duración o interés compuesto) debe venir de \
+buscar_documentos. Busca con términos en inglés. Puedes buscar varias veces. \
 Los reportes 10-K son los más recientes (año fiscal 2026); no agregues años a la búsqueda.
 3. Usa calculadora_financiera para cualquier cálculo. No hagas aritmética de memoria.
 4. Para datos de mercado usa las herramientas de Alpaca: get_stock_snapshot (precio actual), \

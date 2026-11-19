@@ -82,3 +82,11 @@ def test_buying_power():
 def test_missing_price_is_rejected(symbol):
     result = check_order(client(RiskProfile.MODERATE), Order(symbol=symbol, qty=1), RULES)
     assert result.reason == Reason.MISSING_PRICE
+
+
+def test_menciones_de_instrumentos():
+    from asesoria.domain.guardrails import mentioned_tickers
+
+    assert mentioned_tickers("¿Qué relación tiene Microsoft con OpenAI?") == ["MSFT"]
+    assert mentioned_tickers("Compara SHY con TLT") == ["SHY", "TLT"]
+    assert mentioned_tickers("Dame una receta de ceviche") == []

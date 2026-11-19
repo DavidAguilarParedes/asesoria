@@ -17,6 +17,7 @@ from asesoria.application.middleware import (
 )
 from asesoria.application.order_gate import OrderGate
 from asesoria.application.prompts import SYSTEM_PROMPT, session_context
+from asesoria.domain.guardrails import mentioned_tickers
 from asesoria.domain.ports import RelevanceChecker
 
 OFF_TOPIC_REPLY = (
@@ -171,7 +172,8 @@ class AdvisorService:
                 status="pending_approval",
                 pending=self._pending(state),
             )
-        if self.relevance:
+        # Si nombra un instrumento aprobado está en tema; el LLM solo decide los demás casos
+        if self.relevance and not mentioned_tickers(message):
             verdict = self.relevance.check(message)
             if not verdict.on_topic:
                 return AdvisorReply(session_id=session_id, text=OFF_TOPIC_REPLY, status="blocked")
