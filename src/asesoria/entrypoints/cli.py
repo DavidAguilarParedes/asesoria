@@ -24,8 +24,49 @@ def download(force: bool = False) -> None:
 
 @app.command()
 def ingest(contextual: bool = False) -> None:
-    """Descarga e indexa el corpus."""
-    typer.echo(f"ingest (contextual={contextual}): pendiente")
+    """Carga, chunkea e indexa el corpus en Qdrant."""
+    from asesoria import bootstrap
+    from asesoria.application.ingest import build_chunks
+    from asesoria.config import get_settings
+
+    if contextual:
+        typer.echo("El modo --contextual todavía no está implementado.")
+        raise typer.Exit(1)
+
+    settings = get_settings()
+    files = bootstrap.corpus_files(settings)
+    missing = [str(p) for _, p in files if not p.exists()]
+    if missing:
+        typer.echo("Faltan archivos, corre primero `asesoria download`:\n" + "\n".join(missing))
+        raise typer.Exit(1)
+
+    chunks = build_chunks(files, bootstrap.loader_for, bootstrap.make_chunker())
+    store = bootstrap.make_store(settings)
+    store.reset()
+    kb = bootstrap.make_knowledge_base(settings, store)
+    kb.index(chunks)
+    typer.echo(f"Indexados {len(chunks)} chunks de {len(files)} documentos.")
+    typer.echo(f"Embeddings: {kb.dense.misses} nuevos, {kb.dense.hits} desde caché.")
+
+
+@app.command()
+def search(
+    query: str,
+    ticker: str | None = None,
+    doc_type: str | None = None,
+    mode: str = "hybrid",
+    k: int = 5,
+) -> None:
+    """Busca en la base de conocimiento (para probar a mano)."""
+    from asesoria import bootstrap
+    from asesoria.config import get_settings
+
+    settings = get_settings()
+    retriever = bootstrap.make_retriever(bootstrap.make_knowledge_base(settings), mode)
+    results = retriever.retrieve(query, {"ticker": ticker, "doc_type": doc_type}, k)
+    for i, c in enumerate(results, start=1):
+        preview = c.content[:160].replace("\n", " ")
+        typer.echo(f"{i}. [{c.score:.3f}] {c.chunk_id} · {c.section}\n   {preview}…")
 
 
 @app.command()

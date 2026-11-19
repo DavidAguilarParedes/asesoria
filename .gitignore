@@ -17,3 +17,4 @@ wheels/
 data/raw/
 .qdrant/
 logs/
+.cache/

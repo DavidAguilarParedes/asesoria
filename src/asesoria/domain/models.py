@@ -33,6 +33,11 @@ class SourceDoc(BaseModel):
         return ".html"
 
 
+class SparseVector(BaseModel):
+    indices: list[int]
+    values: list[float]
+
+
 class ProcessedChunk(BaseModel):
     chunk_id: str
     content: str
@@ -45,8 +50,13 @@ class ProcessedChunk(BaseModel):
     source_url: str | None = None
     context: str | None = None
     dense_vector: list[float] | None = None
+    sparse_vector: SparseVector | None = None
     score: float | None = None
     rerank_score: float | None = None
+
+    @property
+    def embedding_text(self) -> str:
+        return f"{self.context}\n{self.content}" if self.context else self.content
 
 
 class Citation(BaseModel):

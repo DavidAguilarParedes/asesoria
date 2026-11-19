@@ -1,7 +1,9 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from asesoria.domain.models import SourceDoc
+from asesoria.domain.models import ProcessedChunk, SourceDoc
+from asesoria.domain.ports import ChunkingStrategy, Loader
 
 
 @dataclass
@@ -24,3 +26,14 @@ def download_corpus(sources: list[SourceDoc], fetch, raw_dir: Path) -> DownloadR
         else:
             report.ok.append(doc.id)
     return report
+
+
+def build_chunks(
+    docs: list[tuple[SourceDoc, Path]],
+    loader_for: Callable[[SourceDoc], Loader],
+    chunker: ChunkingStrategy,
+) -> list[ProcessedChunk]:
+    units: list[ProcessedChunk] = []
+    for doc, path in docs:
+        units.extend(loader_for(doc).load(doc, path))
+    return chunker.split(units)
