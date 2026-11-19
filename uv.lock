@@ -39,6 +39,19 @@ wheels = [
 ]
 
 [[package]]
+name = "agent-framework-openai"
+version = "1.18.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "agent-framework-core" },
+    { name = "openai" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d7/d9/d09025590ea8138d7dbe364133c4de4981878d4e5254a144005ac4d18924/agent_framework_openai-1.18.2.tar.gz", hash = "sha256:e88cd384af6cdc12a855425fd92d6131519550cc6157afc24796250af8ebb33e", size = 79711 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/e6/cb4bff3b07a50cec20585767c2e1034a1561b103dd290c5ac64f9ba8e87e/agent_framework_openai-1.18.2-py3-none-any.whl", hash = "sha256:f0522f10ced39f9956cdb55956582f1abcbfdda528cf7d9a02c46f2f73e09460", size = 84617 },
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -248,6 +261,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "agent-framework-core" },
+    { name = "agent-framework-openai" },
     { name = "beautifulsoup4" },
     { name = "fastapi" },
     { name = "fonttools" },
@@ -286,6 +300,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "agent-framework-core", specifier = ">=1.26.0" },
+    { name = "agent-framework-openai", specifier = ">=1.18.2" },
     { name = "beautifulsoup4", specifier = ">=4.15.0" },
     { name = "fastapi", specifier = ">=0.165.0" },
     { name = "fonttools", specifier = ">=4.68.0" },

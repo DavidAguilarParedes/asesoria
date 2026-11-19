@@ -89,6 +89,7 @@ def search(
         )
     finally:
         cost = c.save_costs(f"search {cfg.label}")
+        c.close()
 
     typer.echo(f"Pipeline: {cfg.label}")
     for i, chunk in enumerate(results, start=1):
@@ -96,6 +97,54 @@ def search(
         preview = chunk.content[:160].replace("\n", " ")
         typer.echo(f"{i}. [{score:.3f}] {chunk.chunk_id} · {chunk.section}\n   {preview}…")
     typer.echo(f"Costo LLM: {cost}")
+
+
+def _print_reply(reply, show_tools: bool) -> None:
+    if show_tools:
+        for call in reply.tool_calls:
+            args = ", ".join(f"{k}={v!r}" for k, v in call.arguments.items() if v is not None)
+            typer.secho(f"  · {call.tool}({args}) [{call.ms} ms]", fg="cyan")
+    if reply.blocked:
+        typer.secho("  (bloqueado por el guardrail de relevancia)", fg="yellow")
+    typer.echo(f"\nAsesorIA: {reply.text}\n")
+
+
+@app.command()
+def ask(message: str, client: str | None = "c-002", tools: bool = True) -> None:
+    """Hace una sola pregunta al agente asesor."""
+    import asyncio
+
+    c = _container()
+    advisor = c.advisor()
+    session_id = advisor.start_session(client)
+    try:
+        reply = asyncio.run(advisor.ask(session_id, message))
+        _print_reply(reply, tools)
+    finally:
+        typer.echo(f"Costo: {c.save_costs('ask')}")
+        c.close()
+
+
+@app.command()
+def chat(client: str | None = "c-002", tools: bool = True) -> None:
+    """Conversación con el agente en la terminal. Escribe 'salir' para terminar."""
+    import asyncio
+
+    c = _container()
+    advisor = c.advisor()
+    session_id = advisor.start_session(client)
+    typer.echo(f"Sesión {session_id} · cliente {client}. Escribe 'salir' para terminar.")
+    loop = asyncio.new_event_loop()
+    try:
+        while True:
+            message = typer.prompt("Tú")
+            if message.strip().lower() in {"salir", "exit", "quit"}:
+                break
+            _print_reply(loop.run_until_complete(advisor.ask(session_id, message)), tools)
+    finally:
+        loop.close()
+        typer.echo(f"Costo de la sesión: {c.save_costs('chat')}")
+        c.close()
 
 
 @app.command()

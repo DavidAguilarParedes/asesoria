@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     openai_fast_model: str = "gpt-5-nano"
     openai_embedding_model: str = "text-embedding-3-small"
     max_usd_per_run: float = 0.30
+    agent_reasoning_effort: str = "low"
+    # Puntaje mínimo del reranker para considerar que hay evidencia
+    rag_min_score: float = -2.0
 
     alpaca_api_key: SecretStr | None = None
     alpaca_secret_key: SecretStr | None = None

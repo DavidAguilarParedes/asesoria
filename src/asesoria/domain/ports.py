@@ -1,7 +1,14 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from asesoria.domain.models import FilterSuggestion, ProcessedChunk, SourceDoc, SparseVector
+from asesoria.domain.guardrails import RelevanceVerdict
+from asesoria.domain.models import (
+    ClientProfile,
+    FilterSuggestion,
+    ProcessedChunk,
+    SourceDoc,
+    SparseVector,
+)
 
 
 class Loader(ABC):
@@ -104,3 +111,13 @@ class ContextCompressor(ABC):
 class ChunkContextualizer(ABC):
     @abstractmethod
     def situate(self, document: str, chunk: ProcessedChunk) -> str: ...
+
+
+class ClientRepository(ABC):
+    @abstractmethod
+    def get(self, client_id: str) -> ClientProfile | None: ...
+
+
+class RelevanceChecker(ABC):
+    @abstractmethod
+    def check(self, message: str) -> RelevanceVerdict: ...

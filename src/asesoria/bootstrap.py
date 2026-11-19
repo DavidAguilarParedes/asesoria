@@ -167,6 +167,61 @@ class Container:
             pipeline = deco.CompressionDecorator(pipeline, q.LLMCompressor(self.llm, fast))
         return pipeline
 
+    # --- agente ---
+
+    def clients(self):
+        from asesoria.infrastructure.clients import JsonClientRepository
+
+        return JsonClientRepository(self.settings.data_dir / "clientes.json")
+
+    def rules(self):
+        return policies.read_rules(self.settings.data_dir / "policies")
+
+    def agent_retrieval(self) -> RetrievalConfig:
+        return RetrievalConfig(mode="hybrid", rerank=True)
+
+    def record_agent_usage(self, usage: dict) -> None:
+        self.tracker.add(
+            self.settings.openai_chat_model,
+            usage.get("input_token_count", 0),
+            usage.get("openai.cached_input_tokens", 0),
+            usage.get("output_token_count", 0),
+        )
+
+    def advisor(self, guard: bool = True):
+        from agent_framework.openai import OpenAIChatClient
+
+        from asesoria.application.advisor import AdvisorService
+        from asesoria.application.tools import build_tools
+        from asesoria.infrastructure.query_llm import LLMRelevanceChecker
+
+        chat = OpenAIChatClient(
+            model=self.settings.openai_chat_model,
+            api_key=self.settings.openai_api_key.get_secret_value(),
+        )
+        tools = build_tools(
+            retriever=self.retriever(self.agent_retrieval()),
+            clients=self.clients(),
+            rules=self.rules(),
+            min_score=self.settings.rag_min_score,
+        )
+        relevance = (
+            LLMRelevanceChecker(self.llm, self.settings.openai_fast_model) if guard else None
+        )
+        return AdvisorService(
+            chat_client=chat,
+            tools=tools,
+            relevance=relevance,
+            trace_path=Path("logs/tool_calls.jsonl"),
+            on_usage=self.record_agent_usage,
+            options={"reasoning": {"effort": self.settings.agent_reasoning_effort}, "store": False},
+        )
+
+    def close(self) -> None:
+        for store in self._stores.values():
+            store.client.close()
+        self._stores.clear()
+
     def save_costs(self, command: str) -> str:
         self.tracker.save(COSTS_LOG, command)
         return self.tracker.summary()

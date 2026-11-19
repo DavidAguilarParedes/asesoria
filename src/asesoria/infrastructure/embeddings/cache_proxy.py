@@ -13,7 +13,8 @@ class CachingEmbedder(Embedder):
         self.inner = inner
         self.namespace = namespace
         cache_path.parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(cache_path)
+        # MAF ejecuta las tools en otro hilo
+        self.db = sqlite3.connect(cache_path, check_same_thread=False)
         self.db.execute("CREATE TABLE IF NOT EXISTS emb (key TEXT PRIMARY KEY, vec TEXT)")
         self.hits = 0
         self.misses = 0
