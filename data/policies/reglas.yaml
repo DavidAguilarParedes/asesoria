@@ -1,0 +1,32 @@
+# Fuente única de los límites. Las políticas en Markdown deben coincidir (lo verifica un test).
+instruments:
+  AAPL: accion
+  MSFT: accion
+  NVDA: accion
+  SHY: bonos_corto
+  AGG: bonos_medio
+  TLT: bonos_largo
+  IVV: renta_variable_amplia
+
+# Máximo por instrumento como fracción del valor del portafolio
+concentration:
+  conservador:
+    accion: 0.0
+    bonos_corto: 0.6
+    bonos_medio: 0.5
+    bonos_largo: 0.0
+    renta_variable_amplia: 0.2
+  moderado:
+    accion: 0.1
+    bonos_corto: 0.5
+    bonos_medio: 0.5
+    bonos_largo: 0.2
+    renta_variable_amplia: 0.4
+  agresivo:
+    accion: 0.2
+    bonos_corto: 0.4
+    bonos_medio: 0.4
+    bonos_largo: 0.3
+    renta_variable_amplia: 0.6
+
+max_order_usd: 10000

@@ -27,7 +27,10 @@ class SourceDoc(BaseModel):
 
     @property
     def extension(self) -> str:
-        return ".pdf" if self.url.lower().endswith(".pdf") else ".html"
+        for ext in (".pdf", ".md"):
+            if self.url.lower().endswith(ext):
+                return ext
+        return ".html"
 
 
 class ProcessedChunk(BaseModel):
