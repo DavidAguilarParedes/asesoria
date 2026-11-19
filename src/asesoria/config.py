@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     alpaca_api_key: SecretStr | None = None
     alpaca_secret_key: SecretStr | None = None
     alpaca_paper_trade: bool = True
+    # La API abre el MCP de Alpaca al arrancar; en false responde sin acceso al mercado
+    api_use_mcp: bool = True
 
     # La SEC pide un User-Agent con nombre y correo de contacto
     sec_user_agent: str = "asesoria-demo"

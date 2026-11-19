@@ -201,9 +201,13 @@ def costs() -> None:
 
 
 @app.command()
-def serve(host: str = "0.0.0.0", port: int = 8000) -> None:
-    """Levanta la API."""
+def serve(host: str = "0.0.0.0", port: int = 8000, mcp: bool = True) -> None:
+    """Levanta la API y la página de demo en http://localhost:8000."""
+    import os
+
     import uvicorn
+
+    os.environ["API_USE_MCP"] = str(mcp).lower()
 
     uvicorn.run("asesoria.entrypoints.api:app", host=host, port=port)
 
