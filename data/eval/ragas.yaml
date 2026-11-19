@@ -1,0 +1,210 @@
+# Casos generados con Ragas (asesoria generate-cases) y revisados a mano.
+# Origen: data/eval/ragas_raw.json (24 casos). Se quedan 13.
+#
+# Preguntas y referencias tal cual las generó Ragas, salvo estas ediciones:
+# 9, 12 y 14 no nombraban la empresa ("la empresa", "esta compañía"); se agregó.
+# 16 citaba el boletín de bonos corporativos pero el contexto es el de riesgo de tasa.
+#
+# Descartados:
+#   1  pregunta por la fecha de lanzamiento de AGG: no le sirve a nadie
+#   3  pregunta por TLT pero parte del contexto es del prospecto de AGG
+#   4  no dice de qué fondo habla
+#   5  no dice de qué fondo habla y la comisión (0.15%) no es la del prospecto de AGG
+#   7  no dice de qué fondo habla
+#   10 "si yo soy customer": no tiene sentido para un asesor
+#   11 no dice de qué empresa habla (mezcla tres 10-K)
+#   13 no dice de qué empresa habla
+#   20 repite el caso 9
+#   21 pregunta por Omniverse: no es relevante para invertir
+#   23 habla de Microsoft pero los riesgos vienen del 10-K de NVIDIA
+#
+# La evidencia es a nivel de documento: Ragas no guarda la sección de origen.
+
+- id: rg-00
+  type: rag
+  source: ragas
+  hops: single
+  question: ¿Qué papel tiene S&P en las calificaciones de crédito del fondo AGG y cómo se usan sus notas?
+  evidence:
+  - - doc_id: agg-factsheet
+  reference: Las calificaciones de crédito de los valores subyacentes del fondo AGG se reciben de S&P,
+    Moody’s y Fitch y se convierten al equivalente de la categoría mayor de S&P. BlackRock utiliza la
+    mediana cuando las tres agencias califican un valor, la más baja si solo dos agencias lo hacen y una
+    sola calificación si solo hay una, y ese proceso determina el desglose de la calidad crediticia del
+    portafolio.
+- id: rg-02
+  type: rag
+  source: ragas
+  hops: single
+  question: Como jubilado que quiere proteger mi capital, ¿qué riesgos y características de seguridad
+    tiene el iShares Core S&P 500 ETF, incluyendo su volatilidad, coste y si mi capital está garantizado?
+  evidence:
+  - - doc_id: ivv-factsheet
+  reference: 'El iShares Core S&P 500 ETF es un fondo de renta variable que busca replicar el S&P 500
+    y ofrece exposición a empresas estadounidenses de gran capitalización; su clase de activo es Equity.
+    Presenta una volatilidad medida como desviación estándar a 3 años de 13.05% y un beta de 1.00, y sus
+    costes son bajos con un expense ratio y management fee de 0.03%. No existe garantía de seguridad del
+    capital: la información indica que el rendimiento pasado no garantiza resultados futuros y que el
+    valor de la inversión y el principal fluctuarán, pudiendo valer más o menos que el coste original.'
+- id: rg-06
+  type: rag
+  source: ragas
+  hops: multi
+  question: ¿Es seguro para proteger capital el iShares Core U.S. Aggregate Bond ETF y qué dicen su rendimiento
+    (30 Day SEC Yield), duración y calidad crediticia del iShares Core U.S. Aggregate Bond ETF sobre su
+    riesgo?
+  evidence:
+  - - doc_id: agg-factsheet
+  reference: El fondo muestra un 30 Day SEC Yield de 5.04%, Effective Duration de 5.71 años y Weighted
+    Avg Maturity de 8.21 años, con desviación estándar (3y) de 5.57% y exposición a Tesoro ~46.66% y MBS
+    ~22.98%. La calidad crediticia es mayoritariamente alta (AA 73.62%, A 11.84%, BBB 11.52%) y las comisiones
+    son bajas (expense ratio 0.03%). Sin embargo, su rendimiento ha variado (por ejemplo NAV 2022 -13.06%,
+    2023 5.58%) y el documento indica que el valor del principal fluctúa y no garantiza protección del
+    capital.
+- id: rg-08
+  type: rag
+  source: ragas
+  hops: multi
+  question: Como asesor junior, ¿qué diferencias clave debo explicar a un cliente entre AGG y IVV respecto
+    a su cotización en NYSE Arca, su clase de activo, rendimiento (30 Day SEC Yield o rendimiento anualizado)
+    y tamaño del fondo (Net Assets)?
+  evidence:
+  - - doc_id: agg-factsheet
+  - - doc_id: ivv-factsheet
+  reference: AGG cotiza en NYSE Arca y es un ETF de renta fija (Fixed Income) con 30 Day SEC Yield de
+    5.04% y Net Assets de $135,651.66 millones; su objetivo es ofrecer exposición amplia al mercado de
+    bonos de grado de inversión. IVV también cotiza en NYSE Arca pero es un ETF de renta variable (Equity)
+    que muestra 30 Day SEC Yield de 0.98%, una expense ratio de 0.03% y Net Assets de $888,128.94 millones,
+    además de presentar rendimiento anualizado (por ejemplo NAV 1a 22.29%).
+- id: rg-09
+  type: rag
+  source: ragas
+  hops: single
+  question: Como inversor joven con horizonte largo, ¿qué riesgos relacionados con las accelerated computing
+    platforms de NVIDIA debo considerar que podrían afectar al negocio y al precio de las acciones, y
+    cuáles son las dependencias clave que la empresa necesita cumplir para mitigar esos riesgos?
+  evidence:
+  - - doc_id: nvda-10k-2026
+  reference: Las accelerated computing platforms enfrentan cambios rápidos en tecnología, requisitos de
+    clientes, productos competitivos y estándares de la industria, y su éxito depende de identificar cambios
+    del sector, adaptar estrategias, desarrollar o asegurar acceso a nuevas tecnologías mediante I+D,
+    lanzar nuevas ofertas (incluyendo software, servicios y soluciones en la nube), ampliar el ecosistema,
+    cumplir expectativas de seguridad y cumplimiento, gestionar ciclos de vida de productos, y asegurar
+    la infraestructura necesaria y las inversiones técnicas, financieras y operativas. Si la empresa no
+    cumple estos criterios o fracasa en desarrollar, monetizar u obtener adopción de nuevos productos,
+    sus resultados financieros pueden verse afectados y, si los resultados están por debajo de las expectativas,
+    el precio de sus acciones podría descender.
+- id: rg-12
+  type: rag
+  source: ragas
+  hops: multi
+  question: Como jubilado preocupado por proteger mi capital, ¿cómo afectan el tema "AI investment, models,
+    and competitive landscape", la "Cost structure uncertainty (model training/inference, components,
+    energy)" y la "Data security and compliance" a la seguridad de invertir en Microsoft y cuáles son
+    los principales riesgos que podrían reducir la rentabilidad o poner en peligro el capital?
+  evidence:
+  - - doc_id: msft-10k-2026
+  reference: La compañía enfrenta intensa competencia en IA y plataformas que puede reducir ventas y márgenes,
+    y sus grandes inversiones en IA y centros de datos requieren capital significativo y pueden no generar
+    ingresos en los plazos esperados. La estructura de costes de IA es incierta (entrenamiento/inferencia,
+    componentes, energía) y aumentos o precios decrecientes podrían afectar márgenes y resultados financieros.
+    Además, deben mantener la seguridad de los datos y el cumplimiento; el uso indebido, fallos de seguridad
+    o problemas de cumplimiento pueden causar daño reputacional, escrutinio regulatorio y impactos adversos
+    en el negocio.
+- id: rg-14
+  type: rag
+  source: ragas
+  hops: multi
+  question: Como jubilado que quiere proteger su capital, ¿qué riesgos estratégicos representan los smartphones
+    para los ingresos de Microsoft por licencias de sistemas operativos y cómo la competencia en smartphones
+    y las inversiones en cloud y IA podrían afectar los márgenes y la condición financiera de la empresa?
+  evidence:
+  - - doc_id: msft-10k-2026
+  reference: Los smartphones y tablets compiten con los PCs porque los usuarios los usan para funciones
+    que antes hacía el PC, lo que puede dificultar atraer desarrolladores a la plataforma de PC y reducir
+    los ingresos por licencias del sistema operativo al competir con plataformas licenciadas a bajo o
+    ningún costo. Además, la intensa competencia en plataformas y la necesidad de realizar inversiones
+    sustanciales en cloud e IA pueden aumentar la estructura de costes, reducir márgenes y, si la empresa
+    no ejecuta eficazmente, afectar negativamente su condición financiera y crecimiento de ingresos.
+- id: rg-15
+  type: rag
+  source: ragas
+  hops: single
+  question: ¿Qué explica Investor.gov sobre la relación entre las tasas de interés del mercado y los precios
+    de los bonos?
+  evidence:
+  - - doc_id: sec-interest-rate-risk
+  reference: 'Investor.gov explica que las tasas de interés del mercado y los precios de los bonos de
+    tasa fija se mueven en direcciones opuestas, fenómeno conocido como riesgo de tasa de interés: cuando
+    las tasas suben, los precios de los bonos de tasa fija caen, y cuando las tasas bajan, esos precios
+    suben. Además, pone ejemplos con bonos del Tesoro mostrando que al subir las tasas la rentabilidad
+    hasta el vencimiento aumenta y al bajar las tasas dicha rentabilidad disminuye.'
+- id: rg-16
+  type: rag
+  source: ragas
+  hops: single
+  question: Como analista de riesgos, según Investor.gov, ¿de qué manera la tasa de cupón y el vencimiento
+    afectan la sensibilidad de los bonos al riesgo de tasa de interés, y cambia esto si el bono está asegurado
+    o garantizado por el gobierno?
+  evidence:
+  - - doc_id: sec-interest-rate-risk
+  reference: Una tasa de cupón más baja generalmente implica mayor riesgo por cambios en las tasas de
+    interés porque el precio del bono caerá más si las tasas suben, mientras que una tasa de cupón más
+    alta reduce ese riesgo; asimismo, un vencimiento más largo implica mayor riesgo de tasa de interés
+    y por ello los bonos a más largo plazo suelen ofrecer cupones más altos para compensar ese riesgo.
+    Todos los bonos están sujetos a riesgo de tasa de interés incluso si están asegurados o garantizados
+    por el gobierno, porque la garantía no protege el precio de mercado si se vende antes del vencimiento.
+    Si se tiene la intención de mantener un bono hasta su vencimiento, las fluctuaciones diarias del precio
+    son menos relevantes porque se recibirá el pago de intereses pactado y el valor nominal al vencimiento.
+- id: rg-17
+  type: rag
+  source: ragas
+  hops: single
+  question: Como analista de riesgos, ¿puede explicar detalladamente el papel y las responsabilidades
+    de los Autorized Partisipants en el proceso de creación y redención de ETFs, incluyendo cómo interactúan
+    con el patrocinador del fondo, qué son las Creation Units y qué implicaciones tiene su actividad para
+    el suministro de acciones en el mercado secundario?
+  evidence:
+  - - doc_id: sec-etfs
+  reference: Los Authorized Participants suelen ser grandes broker-dealers con los que los patrocinadores
+    de ETF entran en relaciones contractuales y son los únicos autorizados a comprar y redimir acciones
+    directamente con el ETF en grandes agregaciones llamadas Creation Units (por ejemplo, 50,000 acciones).
+    Para crear, el Authorized Participant reúne y deposita una cesta designada de valores y efectivo con
+    el fondo a cambio de acciones ETF que luego puede vender en el mercado, y para redimir realiza el
+    proceso inverso entregando un gran bloque de acciones al fondo a cambio de una cesta predefinida de
+    valores o su equivalente en efectivo.
+- id: rg-18
+  type: rag
+  source: ragas
+  hops: single
+  question: ¿Qué son las exchange-traded nots?
+  evidence:
+  - - doc_id: sec-etfs
+  reference: Este boletín no aborda las exchange-traded notes; trata solo ETFs registrados como open-end
+    investment companies o unit investment trusts bajo la Ley de 1940. Al considerar una inversión, asegúrese
+    de entender completamente el producto particular antes de tomar una decisión.
+- id: rg-19
+  type: rag
+  source: ragas
+  hops: single
+  question: Que es arbitrage y como funciona con los ETF?
+  evidence:
+  - - doc_id: sec-etfs
+  reference: Arbitrage es la practica de aprovechar una diferencia de precio entre dos o mas mercados;
+    en los ETF esto surge porque el precio de mercado intradiario puede no igualar el NAV al final del
+    dia. Los Authorized Participants pueden arbitrar esa diferencia negociando directamente con el ETF
+    al NAV y en el mercado, y como resultado esperado el precio de mercado del ETF vuelve a alinearse
+    con su NAV por accion.
+- id: rg-22
+  type: rag
+  source: ragas
+  hops: multi
+  question: Con IVV, considerando IVV y su mezcla de top holdings y características del fondo, cuáles
+    son los niveles de concentración en las principales posiciones (por ejemplo NVIDIA y APPLE) y en el
+    sector Information Technology, y qué datos cuantitativos del fondo (expense ratio, desviación estándar
+    3y, número de holdings, y activos netos) debo revisar para evaluar riesgo de concentración?
+  evidence:
+  - - doc_id: ivv-factsheet
+  reference: Las principales posiciones de IVV suman 36.37% del portafolio, con NVIDIA 7.51% y APPLE 6.58%,
+    y el sector Information Technology representa 37.96%. El fondo tiene Expense Ratio 0.03%, Standard
+    Deviation (3y) 13.05%, Number of Holdings 504 y Net Assets of Fund (M) 888,128.94.

@@ -36,7 +36,12 @@ rerank = [
     "torch>=2.15.0",
 ]
 eval = [
-    "ragas>=0.3.1",
+    # Ragas 0.4 exige openai<3; la 0.3.0 funciona con openai 3 si langchain-community es <0.4.
+    # pillow y rapidfuzz los usa Ragas pero no los declara
+    "ragas==0.3.0",
+    "langchain-community<0.4",
+    "pillow>=10.4.0",
+    "rapidfuzz>=3.0",
 ]
 
 [build-system]

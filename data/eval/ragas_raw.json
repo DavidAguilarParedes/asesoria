@@ -1,0 +1,236 @@
+[
+  {
+    "group": "etfs",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "¿Qué papel tiene S&P en las calificaciones de crédito del fondo AGG y cómo se usan sus notas?",
+    "reference": "Las calificaciones de crédito de los valores subyacentes del fondo AGG se reciben de S&P, Moody’s y Fitch y se convierten al equivalente de la categoría mayor de S&P. BlackRock utiliza la mediana cuando las tres agencias califican un valor, la más baja si solo dos agencias lo hacen y una sola calificación si solo hay una, y ese proceso determina el desglose de la calidad crediticia del portafolio.",
+    "docs": [
+      "agg-factsheet"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Como analista de riesgos, ¿qué significa la fecha 09/22/2003 en relación con el iShares Core U.S. Aggregate Bond ETF (AGG) y cómo debo tenerla en cuenta al revisar límites de concentración e idoneidad?",
+    "reference": "La fecha 09/22/2003 corresponde a la 'Fund Launch Date' del iShares Core U.S. Aggregate Bond ETF (AGG), tal como se indica en los datos proporcionados.",
+    "docs": [
+      "agg-factsheet"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Como jubilado que quiere proteger mi capital, ¿qué riesgos y características de seguridad tiene el iShares Core S&P 500 ETF, incluyendo su volatilidad, coste y si mi capital está garantizado?",
+    "reference": "El iShares Core S&P 500 ETF es un fondo de renta variable que busca replicar el S&P 500 y ofrece exposición a empresas estadounidenses de gran capitalización; su clase de activo es Equity. Presenta una volatilidad medida como desviación estándar a 3 años de 13.05% y un beta de 1.00, y sus costes son bajos con un expense ratio y management fee de 0.03%. No existe garantía de seguridad del capital: la información indica que el rendimiento pasado no garantiza resultados futuros y que el valor de la inversión y el principal fluctuarán, pudiendo valer más o menos que el coste original.",
+    "docs": [
+      "ivv-factsheet"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "multi_hop_abstract_query_synthesizer",
+    "question": "Como cliente conservador jubilado, ¿cómo afectan a la seguridad de mi capital y al riesgo de esta inversión el fondo iShares 20+ Year Treasury Bond ETF considerando el tema \"iShares 20+ Year Treasury Bond ETF\" y en particular el \"Representative sampling indexing\", las \"Fees and expenses of the Fund\" (por ejemplo la comisión de gestión de 0.15%), el \"Interest rate risk and fixed-income sensitivity\" por la larga madurez de los bonos, y los \"Operational risks\" como fallos de sistemas o ciberataques? Por favor explíquelo en lenguaje simple y detallado, conectando cómo cada uno de estos factores puede influir en la posibilidad de perder dinero o en la estabilidad de ingresos para un inversor conservador.",
+    "reference": "El fondo invierte en bonos del Tesoro de EE. UU. con vencimientos superiores a veinte años y por tanto tiene alta sensibilidad a los tipos de interés, ya que los valores con vencimientos más largos suelen sufrir mayores fluctuaciones cuando suben los tipos; aunque la deuda del Tesoro suele implicar poco riesgo de pérdida de principal si se mantiene hasta el vencimiento, su valor de mercado no está garantizado. BFA usa \"representative sampling indexing\" y puede no mantener todos los componentes del índice pero invertirá al menos el 80% en valores del índice y al menos el 90% en títulos del Tesoro, lo que ayuda a rastrear el índice pero puede generar \"tracking error\"; las comisiones y gastos del fondo son bajos (comisión de gestión 0.15% y gastos totales 0.15%), pero otros costes como comisiones de intermediarios o el bid-ask spread pueden afectar el rendimiento. Además existen riesgos operativos y tecnológicos (errores humanos, fallos de sistemas, incidentes de ciberseguridad y uso de IA) y riesgos asociados a préstamos de valores y liquidez que podrían causar pérdidas o afectar la operativa del fondo.",
+    "docs": [
+      "tlt-prospectus",
+      "agg-prospectus",
+      "agg-prospectus",
+      "agg-prospectus"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "multi_hop_abstract_query_synthesizer",
+    "question": "Como junior advisor, dime en pocas palabras: como ocurre el \"tracking error\" y como las \"Fees and expenses (management fee, other expenses, acquired fund fees, fee waivers)\" y el \"NAV versus market price (premium/discount) and bid-ask spread\" pueden afectar los costos y performance del fondo?",
+    "reference": "El tracking error puede ocurrir por diferencias entre los valores y la metodología del índice y del fondo, costos de transacción, tenencia de efectivo no invertido, diferencias en el momento de valoración o impuestos y otros factores que aumentan en mercados volátiles. Las fees and expenses del folleto muestran una Management Fee de 0.03% y Total Annual Fund Operating Expenses de 0.03% (con un ejemplo que implica costos de $3 en 1 año sobre $10,000) y además la alta rotación de cartera (62%) puede generar mayores costes de transacción no reflejados en esas cifras. Como ETF, las acciones negocian a precio de mercado que puede ser premium o discount respecto al NAV y los inversores también afrontan el bid-ask spread al comprar o vender en el mercado secundario.",
+    "docs": [
+      "agg-prospectus",
+      "agg-prospectus",
+      "agg-prospectus"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "multi_hop_abstract_query_synthesizer",
+    "question": "Como cliente conservador quiero proteger mi capital: ¿cómo afectan el \"Management fee (0.15%)\", el \"Tracking error\" y el \"Interest rate risk and fixed-income sensitivity\" al riesgo de perder valor y a los costos de invertir en este ETF, según el prospecto?",
+    "reference": "El prospecto indica que la comisión de gestión es 0.15% anual, que es un coste directo que reduce el rendimiento neto del inversor; además puede haber otros costes como el bid-ask spread y comisiones de intermediarios. El \"tracking error\" puede hacer que el rendimiento del Fondo diverja del índice por diferencias en tenencias, valoración, costes y otras razones y puede aumentar en periodos de alta volatilidad; y el riesgo de tipo de interés hace que el valor de los valores de renta fija baje cuando suben los tipos, siendo los vencimientos más largos más sensibles a esos cambios, por lo que el Fondo puede perder valor aunque mantenga su objetivo de seguimiento.",
+    "docs": [
+      "agg-prospectus",
+      "agg-prospectus",
+      "agg-prospectus"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "multi_hop_specific_query_synthesizer",
+    "question": "¿Es seguro para proteger capital el iShares Core U.S. Aggregate Bond ETF y qué dicen su rendimiento (30 Day SEC Yield), duración y calidad crediticia del iShares Core U.S. Aggregate Bond ETF sobre su riesgo?",
+    "reference": "El fondo muestra un 30 Day SEC Yield de 5.04%, Effective Duration de 5.71 años y Weighted Avg Maturity de 8.21 años, con desviación estándar (3y) de 5.57% y exposición a Tesoro ~46.66% y MBS ~22.98%. La calidad crediticia es mayoritariamente alta (AA 73.62%, A 11.84%, BBB 11.52%) y las comisiones son bajas (expense ratio 0.03%). Sin embargo, su rendimiento ha variado (por ejemplo NAV 2022 -13.06%, 2023 5.58%) y el documento indica que el valor del principal fluctúa y no garantiza protección del capital.",
+    "docs": [
+      "agg-factsheet",
+      "agg-factsheet"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "multi_hop_specific_query_synthesizer",
+    "question": "Oiga, yo tengo 401(k) y quiero saber si mi plata esta segura en un fondo que tiene cosas como MBS y bonos del Tesoro, y también puede tener tracking error y riesgos operativos y de préstamo de valores, y además como afecta eso a mi 401(k) plan cuando retire, me puede explicar todo eso junto y con detalles porque no entiendo bien los riesgos y la parte de impuestos en un 401(k) plan?",
+    "reference": "Los riesgos mencionados en el contexto incluyen tracking error (la divergencia del desempeño del Fondo respecto al índice subyacente), riesgos específicos de los MBS como sensibilidad a tasas, prepayment/extension y riesgo de incumplimiento, riesgos de obligaciones del Tesoro que pueden fluctuar en valor, riesgos operativos y tecnológicos (errores, fallas, ciberseguridad, AI) y riesgos por préstamo de valores que pueden generar pérdidas si el prestatario no devuelve los títulos. El documento indica que el Fondo puede hacer distribuciones que serían gravables como ingreso ordinario o ganancias de capital, pero si invierte a través de una cuenta diferida como un 401(k) plan, generalmente sus distribuciones se gravan cuando se retiran. Además se señala que el tracking error puede agravarse en periodos de alta volatilidad y que ciertos MBS no están respaldados por plena fe y crédito del gobierno, aumentando riesgo de crédito.",
+    "docs": [
+      "agg-prospectus",
+      "agg-prospectus"
+    ]
+  },
+  {
+    "group": "etfs",
+    "synthesizer": "multi_hop_specific_query_synthesizer",
+    "question": "Como asesor junior, ¿qué diferencias clave debo explicar a un cliente entre AGG y IVV respecto a su cotización en NYSE Arca, su clase de activo, rendimiento (30 Day SEC Yield o rendimiento anualizado) y tamaño del fondo (Net Assets)?",
+    "reference": "AGG cotiza en NYSE Arca y es un ETF de renta fija (Fixed Income) con 30 Day SEC Yield de 5.04% y Net Assets de $135,651.66 millones; su objetivo es ofrecer exposición amplia al mercado de bonos de grado de inversión. IVV también cotiza en NYSE Arca pero es un ETF de renta variable (Equity) que muestra 30 Day SEC Yield de 0.98%, una expense ratio de 0.03% y Net Assets de $888,128.94 millones, además de presentar rendimiento anualizado (por ejemplo NAV 1a 22.29%).",
+    "docs": [
+      "agg-factsheet",
+      "ivv-factsheet"
+    ]
+  },
+  {
+    "group": "10-k",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Como inversor joven con horizonte largo, ¿qué riesgos relacionados con las accelerated computing platforms debo considerar que podrían afectar al negocio y al precio de las acciones, y cuáles son las dependencias clave que la empresa necesita cumplir para mitigar esos riesgos?",
+    "reference": "Las accelerated computing platforms enfrentan cambios rápidos en tecnología, requisitos de clientes, productos competitivos y estándares de la industria, y su éxito depende de identificar cambios del sector, adaptar estrategias, desarrollar o asegurar acceso a nuevas tecnologías mediante I+D, lanzar nuevas ofertas (incluyendo software, servicios y soluciones en la nube), ampliar el ecosistema, cumplir expectativas de seguridad y cumplimiento, gestionar ciclos de vida de productos, y asegurar la infraestructura necesaria y las inversiones técnicas, financieras y operativas. Si la empresa no cumple estos criterios o fracasa en desarrollar, monetizar u obtener adopción de nuevos productos, sus resultados financieros pueden verse afectados y, si los resultados están por debajo de las expectativas, el precio de sus acciones podría descender.",
+    "docs": [
+      "nvda-10k-2026"
+    ]
+  },
+  {
+    "group": "10-k",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Si yo soy customer esto es seguro para mi capital? que riesgos hay para customers y mi dinero",
+    "reference": "No es completamente seguro: el texto indica que cambios en servicios en la nube, fuerte competencia y largos plazos de fabricación y restricciones de suministro pueden reducir la demanda, dañar la reputación con customers y causar pérdidas de ingresos. También se describen mayores costos, reducciones de precios, pérdidas por inventario y daños a los resultados financieros que podrían afectar el capital.",
+    "docs": [
+      "nvda-10k-2026"
+    ]
+  },
+  {
+    "group": "10-k",
+    "synthesizer": "multi_hop_abstract_query_synthesizer",
+    "question": "Como asesor junior, ¿de qué manera las \"Cyberattacks and security vulnerabilities\" y las \"Critical component dependencies (advanced semiconductors, memory, rare earths)\" se combinan con los riesgos de \"Foundry capacity and procurement of scarce input materials\" para afectar al negocio de la compañía, según los segmentos de riesgo provistos?",
+    "reference": "Las \"Cyberattacks and security vulnerabilities\" pueden reducir ingresos, aumentar costos y dañar la reputación al permitir el acceso no autorizado a sistemas y datos, mientras que la dependencia de componentes críticos como semiconductores, memoria y tierras raras hace a la compañía vulnerable a interrupciones por tensiones geopolíticas o limitaciones de proveedores; además, la capacidad limitada de fundiciones y la escasez de insumos llevan a plazos de entrega prolongados, primas pagadas, depósitos y acuerdos de suministro a largo plazo que aumentan los costos y pueden no asegurar suficiente capacidad. En conjunto, estas amenazas pueden causar interrupciones en la cadena de suministro, mismatches entre oferta y demanda, pérdidas de ventas, mayores gastos y daño reputacional que afectan los resultados financieros.",
+    "docs": [
+      "aapl-10k-2026",
+      "nvda-10k-2026",
+      "msft-10k-2026"
+    ]
+  },
+  {
+    "group": "10-k",
+    "synthesizer": "multi_hop_abstract_query_synthesizer",
+    "question": "Como jubilado preocupado por proteger mi capital, ¿cómo afectan el tema \"AI investment, models, and competitive landscape\", la \"Cost structure uncertainty (model training/inference, components, energy)\" y la \"Data security and compliance\" a la seguridad de invertir en esta compañía y cuáles son los principales riesgos que podrían reducir la rentabilidad o poner en peligro el capital?",
+    "reference": "La compañía enfrenta intensa competencia en IA y plataformas que puede reducir ventas y márgenes, y sus grandes inversiones en IA y centros de datos requieren capital significativo y pueden no generar ingresos en los plazos esperados. La estructura de costes de IA es incierta (entrenamiento/inferencia, componentes, energía) y aumentos o precios decrecientes podrían afectar márgenes y resultados financieros. Además, deben mantener la seguridad de los datos y el cumplimiento; el uso indebido, fallos de seguridad o problemas de cumplimiento pueden causar daño reputacional, escrutinio regulatorio y impactos adversos en el negocio.",
+    "docs": [
+      "msft-10k-2026",
+      "msft-10k-2026",
+      "msft-10k-2026"
+    ]
+  },
+  {
+    "group": "10-k",
+    "synthesizer": "multi_hop_specific_query_synthesizer",
+    "question": "Como jubilado que quiere proteger su capital, y con preocupaciones simples sobre riesgos y si algo es seguro: dado que la compañia gana ingresos por licencias de Windows pero compite con dispositivos como tablets y tablets que pueden reducir márgenes, y además la empresa está haciendo grandes inversiones en AI y en infraestructura cloud que requieren mucho capital y cuyo retorno depende de la adopción y precios del mercado, ¿puede explicar de forma clara y sencilla cuáles son los principales riesgos para los ingresos y la solvencia relacionados con la competencia de tablets y con las inversiones en AI/cloud, y si esas fuentes de ingresos pueden considerarse seguras para alguien que busca preservar capital?",
+    "reference": "La competencia de dispositivos como tablets puede disminuir las ventas de PCs y reducir los márgenes de los sistemas operativos con licencia, afectando ingresos; además, las inversiones a gran escala en AI y cloud requieren gastos de capital significativos y acceso a capital, y sus retornos no están garantizados porque dependen de la demanda, precios y adopción. Si la adopción de servicios AI/cloud es más lenta de lo esperado o los costes (componentes, energía, entrenamiento de modelos) se mantienen altos, los márgenes y la condición financiera podrían verse adversamente afectados. Por tanto, esos ingresos no son completamente seguros y presentan riesgos que podrían afectar la solvencia y la capacidad de proteger capital.",
+    "docs": [
+      "msft-10k-2026",
+      "msft-10k-2026"
+    ]
+  },
+  {
+    "group": "10-k",
+    "synthesizer": "multi_hop_specific_query_synthesizer",
+    "question": "Como jubilado que quiere proteger su capital, ¿qué riesgos estratégicos representan los smartphones para los ingresos por licencias de sistemas operativos y cómo la competencia en smartphones y las inversiones en cloud y IA podrían afectar los márgenes y la condición financiera de la empresa?",
+    "reference": "Los smartphones y tablets compiten con los PCs porque los usuarios los usan para funciones que antes hacía el PC, lo que puede dificultar atraer desarrolladores a la plataforma de PC y reducir los ingresos por licencias del sistema operativo al competir con plataformas licenciadas a bajo o ningún costo. Además, la intensa competencia en plataformas y la necesidad de realizar inversiones sustanciales en cloud e IA pueden aumentar la estructura de costes, reducir márgenes y, si la empresa no ejecuta eficazmente, afectar negativamente su condición financiera y crecimiento de ingresos.",
+    "docs": [
+      "msft-10k-2026",
+      "msft-10k-2026"
+    ]
+  },
+  {
+    "group": "guias",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "¿Qué explica Investor.gov sobre la relación entre las tasas de interés del mercado y los precios de los bonos?",
+    "reference": "Investor.gov explica que las tasas de interés del mercado y los precios de los bonos de tasa fija se mueven en direcciones opuestas, fenómeno conocido como riesgo de tasa de interés: cuando las tasas suben, los precios de los bonos de tasa fija caen, y cuando las tasas bajan, esos precios suben. Además, pone ejemplos con bonos del Tesoro mostrando que al subir las tasas la rentabilidad hasta el vencimiento aumenta y al bajar las tasas dicha rentabilidad disminuye.",
+    "docs": [
+      "sec-interest-rate-risk"
+    ]
+  },
+  {
+    "group": "guias",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Como analista de riesgos, según \"Investor Bulletin: What Are Corporate Bonds?\", ¿de qué manera la tasa de cupón y el vencimiento afectan la sensibilidad de los bonos al riesgo de tasa de interés, y cambia esto si el bono está asegurado o garantizado por el gobierno?",
+    "reference": "Una tasa de cupón más baja generalmente implica mayor riesgo por cambios en las tasas de interés porque el precio del bono caerá más si las tasas suben, mientras que una tasa de cupón más alta reduce ese riesgo; asimismo, un vencimiento más largo implica mayor riesgo de tasa de interés y por ello los bonos a más largo plazo suelen ofrecer cupones más altos para compensar ese riesgo. Todos los bonos están sujetos a riesgo de tasa de interés incluso si están asegurados o garantizados por el gobierno, porque la garantía no protege el precio de mercado si se vende antes del vencimiento. Si se tiene la intención de mantener un bono hasta su vencimiento, las fluctuaciones diarias del precio son menos relevantes porque se recibirá el pago de intereses pactado y el valor nominal al vencimiento.",
+    "docs": [
+      "sec-interest-rate-risk"
+    ]
+  },
+  {
+    "group": "guias",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Como analista de riesgos, ¿puede explicar detalladamente el papel y las responsabilidades de los Autorized Partisipants en el proceso de creación y redención de ETFs, incluyendo cómo interactúan con el patrocinador del fondo, qué son las Creation Units y qué implicaciones tiene su actividad para el suministro de acciones en el mercado secundario?",
+    "reference": "Los Authorized Participants suelen ser grandes broker-dealers con los que los patrocinadores de ETF entran en relaciones contractuales y son los únicos autorizados a comprar y redimir acciones directamente con el ETF en grandes agregaciones llamadas Creation Units (por ejemplo, 50,000 acciones). Para crear, el Authorized Participant reúne y deposita una cesta designada de valores y efectivo con el fondo a cambio de acciones ETF que luego puede vender en el mercado, y para redimir realiza el proceso inverso entregando un gran bloque de acciones al fondo a cambio de una cesta predefinida de valores o su equivalente en efectivo.",
+    "docs": [
+      "sec-etfs"
+    ]
+  },
+  {
+    "group": "guias",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "¿Qué son las exchange-traded nots?",
+    "reference": "Este boletín no aborda las exchange-traded notes; trata solo ETFs registrados como open-end investment companies o unit investment trusts bajo la Ley de 1940. Al considerar una inversión, asegúrese de entender completamente el producto particular antes de tomar una decisión.",
+    "docs": [
+      "sec-etfs"
+    ]
+  },
+  {
+    "group": "guias",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Que es arbitrage y como funciona con los ETF?",
+    "reference": "Arbitrage es la practica de aprovechar una diferencia de precio entre dos o mas mercados; en los ETF esto surge porque el precio de mercado intradiario puede no igualar el NAV al final del dia. Los Authorized Participants pueden arbitrar esa diferencia negociando directamente con el ETF al NAV y en el mercado, y como resultado esperado el precio de mercado del ETF vuelve a alinearse con su NAV por accion.",
+    "docs": [
+      "sec-etfs"
+    ]
+  },
+  {
+    "group": "cruce",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Con los accelerated computing platforms, qué riesgos principales tengo que revisar como Risk Analyst y qué capacidades debemos exigir para mitigar pérdidas financieras y de mercado dada la velocidad de cambio en tecnología, requisitos de clientes y estándares?",
+    "reference": "Los accelerated computing platforms experimentan cambios rápidos en tecnología, requisitos de clientes, productos competitivos y estándares de la industria, lo que puede volver nuestros productos incompatibles y perjudicar los resultados financieros. Nuestro éxito depende de identificar a tiempo los cambios, adaptar estrategias, desarrollar o conseguir nuevas tecnologías mediante I+D, lanzar nuevas ofertas (software, servicios y soluciones en la nube), expandir el ecosistema, cumplir expectativas de seguridad, fiabilidad y cumplimiento, gestionar ciclos de producto, disponer de infraestructura interna y externa suficiente —incluida energía para centros de datos— y completar las inversiones técnicas, financieras, operativas y comerciales necesarias.",
+    "docs": [
+      "nvda-10k-2026"
+    ]
+  },
+  {
+    "group": "cruce",
+    "synthesizer": "single_hop_specifc_query_synthesizer",
+    "question": "Como asesor junior, ¿qué riesgos financieros conocidos existen para el banco al recomendar productos relacionados con NVIDIA Omniverse?",
+    "reference": "La empresa ofrece o planea ofrecer NVIDIA Omniverse como solución de software independiente y advierte que estos modelos de negocio o estrategias pueden no ser exitosos, pudiendo fallar en vender cualquier software o servicio independiente significativo; además podría incurrir en costos significativos y no lograr ingresos importantes. La sincronización y disponibilidad de servicios en la nube que soportan I+D han cambiado y pueden seguir cambiando, lo que puede impactar ingresos, gastos y cronogramas de desarrollo. La competencia podría afectar negativamente la cuota de mercado y los resultados financieros, reduciendo la demanda o los precios de venta.",
+    "docs": [
+      "nvda-10k-2026"
+    ]
+  },
+  {
+    "group": "cruce",
+    "synthesizer": "multi_hop_specific_query_synthesizer",
+    "question": "Con IVV, considerando IVV y su mezcla de top holdings y características del fondo, cuáles son los niveles de concentración en las principales posiciones (por ejemplo NVIDIA y APPLE) y en el sector Information Technology, y qué datos cuantitativos del fondo (expense ratio, desviación estándar 3y, número de holdings, y activos netos) debo revisar para evaluar riesgo de concentración?",
+    "reference": "Las principales posiciones de IVV suman 36.37% del portafolio, con NVIDIA 7.51% y APPLE 6.58%, y el sector Information Technology representa 37.96%. El fondo tiene Expense Ratio 0.03%, Standard Deviation (3y) 13.05%, Number of Holdings 504 y Net Assets of Fund (M) 888,128.94.",
+    "docs": [
+      "ivv-factsheet",
+      "ivv-factsheet"
+    ]
+  },
+  {
+    "group": "cruce",
+    "synthesizer": "multi_hop_specific_query_synthesizer",
+    "question": "Dado que Microsoft (MICROSOFT CORP) aparece como 4.29% en el iShares Core S&P 500 ETF (IVV) y que el primer segmento enumera riesgos operativos, regulatorios y de seguridad de productos y datos, ¿cómo podrían esos riesgos relacionados con Microsoft afectar al rendimiento del ETF IVV y qué puntos clave debo explicar a mis clientes?",
+    "reference": "Como MICROSOFT CORP constituye el 4.29% de IVV, los riesgos descritos —adverse economic conditions, interrupciones operativas, incidentes de seguridad o violaciones de datos, escrutinio regulatorio y riesgos de propiedad intelectual— podrían dañar el negocio de Microsoft y, por tanto, tener un efecto negativo en el rendimiento de IVV. Además, la concentración del sector de Information Technology en IVV (37.96%) significa que impactos en grandes componentes tecnológicos como Microsoft pueden influir de manera más amplia en el ETF.",
+    "docs": [
+      "nvda-10k-2026",
+      "ivv-factsheet"
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+grupo,casos,faithfulness,n_faithfulness,correctness,n_correctness,goal_accuracy,n_goal_accuracy,tool_call_accuracy,n_tool_call_accuracy,guardrails,n_guardrails,hit@5,mrr@5,n_recuperacion,p50_s,errores
+total,54,0.87,47,0.809,47,0.907,54,0.915,47,0.944,54,0.909,0.807,44,8.4,0
+source=curado,41,0.86,34,0.853,34,0.878,41,0.941,34,0.927,41,0.871,0.742,31,7.2,0
+source=ragas,13,0.894,13,0.695,13,1.0,13,0.846,13,1.0,13,1.0,0.962,13,14.3,0
+hops=single,47,0.879,40,0.801,40,0.915,47,0.9,40,0.936,47,0.892,0.784,37,7.8,0
+hops=multi,7,0.815,7,0.856,7,0.857,7,1.0,7,1.0,7,1.0,0.929,7,15.7,0
+type=rag,43,0.892,42,0.818,43,0.977,43,0.907,43,0.977,43,0.907,0.814,43,9.7,0
+type=negative,3,,0,0.67,3,0.333,3,,0,1.0,3,,,0,3.6,0
+type=behavior,8,0.684,5,0.83,1,0.75,8,1.0,4,0.75,8,1.0,0.5,1,5.5,0

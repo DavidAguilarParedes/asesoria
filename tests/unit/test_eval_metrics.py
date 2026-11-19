@@ -67,7 +67,8 @@ def test_umbral_sugerido():
 
 def test_golden_bien_formado():
     cases = load_golden()
-    assert len(cases) >= 35
+    assert len(cases) >= 50
+    assert any(c.source == "ragas" and c.hops == "multi" for c in cases)
     for case in cases:
         if case.type == "rag":
             assert case.evidence, case.id

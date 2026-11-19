@@ -213,9 +213,23 @@ def serve(host: str = "0.0.0.0", port: int = 8000, mcp: bool = True) -> None:
 
 
 @app.command("eval")
-def evaluate() -> None:
-    """Corre el agente evaluador."""
-    typer.echo("eval: pendiente")
+def evaluate(
+    judge_model: str = "gpt-4o-mini", reuse: bool = False, only: str | None = None
+) -> None:
+    """Agente evaluador: corre el set contra el asesor y exporta las métricas (results/eval.*).
+
+    Con --reuse vuelve a juzgar las respuestas guardadas sin correr el asesor otra vez.
+    Con --only goal_accuracy,correctness vuelve a juzgar solo esas métricas.
+    """
+    from evaluator.run import main
+
+    c = _container()
+    try:
+        metrics = only.split(",") if only else None
+        main(c, judge_model, reuse, metrics, log=typer.echo)
+    finally:
+        typer.echo(f"Costo: {c.save_costs('eval')}")
+        c.close()
 
 
 @app.command()
@@ -228,6 +242,19 @@ def ablation(only: str | None = None) -> None:
         main(c, only, log=typer.echo)
     finally:
         typer.echo(f"Costo: {c.save_costs('ablation')}")
+        c.close()
+
+
+@app.command("generate-cases")
+def generate_cases(model: str = "gpt-5-mini") -> None:
+    """Genera casos con Ragas y personas en data/eval/ragas_raw.json (para revisar a mano)."""
+    from evaluator.generate_cases import main
+
+    c = _container()
+    try:
+        main(c, model, log=typer.echo)
+    finally:
+        typer.echo(f"Costo: {c.save_costs('generate-cases')}")
         c.close()
 
 
