@@ -33,7 +33,7 @@ class ToolTraceMiddleware(FunctionMiddleware):
     def __init__(
         self,
         log_path: Path | None = None,
-        max_chars: int = 2000,
+        max_chars: int = 10_000,
         risk_by_tool: dict[str, str] | None = None,
         sink: Callable[[ToolCall], None] | None = None,
     ):

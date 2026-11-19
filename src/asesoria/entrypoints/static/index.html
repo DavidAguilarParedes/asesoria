@@ -132,7 +132,7 @@ function renderOrder(order) {
 
 function renderReply(reply) {
   sessionId = reply.session_id;
-  const text = reply.text || (reply.pending.length ? "Te propongo esta orden. Revísala antes de confirmar:" : "");
+  const text = reply.text;
   const box = el("div", "msg" + (reply.status === "blocked" ? " blocked" : ""), text);
   renderTools(box, reply);
   log.append(box);

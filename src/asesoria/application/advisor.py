@@ -16,7 +16,7 @@ from asesoria.application.middleware import (
     ToolTraceMiddleware,
 )
 from asesoria.application.order_gate import OrderGate
-from asesoria.application.prompts import SYSTEM_PROMPT, session_context
+from asesoria.application.prompts import DISCLAIMER, SYSTEM_PROMPT, session_context
 from asesoria.domain.guardrails import mentioned_tickers
 from asesoria.domain.ports import RelevanceChecker
 
@@ -133,9 +133,15 @@ class AdvisorService:
             return await self._run(session_id, Message("user", rejections))
 
         pending = self._pending(state)
+        text = response.text
+        # Al proponer una orden el modelo suele no escribir texto: el aviso se agrega en código
+        if pending and DISCLAIMER not in text:
+            text = (
+                f"{text or 'Te propongo esta orden. Revísala antes de confirmar.'}\n\n{DISCLAIMER}"
+            )
         return AdvisorReply(
             session_id=session_id,
-            text=response.text,
+            text=text,
             status="pending_approval" if pending else "ok",
             pending=pending,
             tool_calls=tool_calls,
