@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from asesoria.domain.models import ProcessedChunk
+from asesoria.domain.models import ProcessedChunk, SourceDoc
 
 
 class Loader(ABC):
     @abstractmethod
-    def load(self, path: Path) -> list[ProcessedChunk]: ...
+    def load(self, doc: SourceDoc, path: Path) -> list[ProcessedChunk]: ...
 
 
 class ChunkingStrategy(ABC):
