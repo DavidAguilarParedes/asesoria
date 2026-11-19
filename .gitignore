@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Secretos
+.env
+
+# Datos generados
+data/raw/
+.qdrant/
+logs/

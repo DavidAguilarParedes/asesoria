@@ -1,0 +1,5 @@
+[
+  {"client_id": "c-001", "name": "Cliente Conservador", "risk_profile": "conservador", "portfolio_value_usd": 25000, "horizon_years": 2},
+  {"client_id": "c-002", "name": "Cliente Moderado", "risk_profile": "moderado", "portfolio_value_usd": 10000, "horizon_years": 5},
+  {"client_id": "c-003", "name": "Cliente Agresivo", "risk_profile": "agresivo", "portfolio_value_usd": 50000, "horizon_years": 10}
+]

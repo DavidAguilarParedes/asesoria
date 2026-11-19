@@ -1,0 +1,19 @@
+{
+  "name": "asesoria",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pipx install uv && uv sync --extra rerank",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": { "label": "API AsesorIA" }
+  },
+  "secrets": {
+    "OPENAI_API_KEY": { "description": "API key de OpenAI" },
+    "ALPACA_API_KEY": { "description": "API key de la cuenta paper de Alpaca" },
+    "ALPACA_SECRET_KEY": { "description": "Secret de la cuenta paper de Alpaca" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "charliermarsh.ruff"]
+    }
+  }
+}

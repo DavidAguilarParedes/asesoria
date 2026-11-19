@@ -1,0 +1,67 @@
+# Corpus público (17 documentos). Las 3 políticas internas están en data/policies/.
+- id: aapl-10k-2026
+  ticker: AAPL
+  doc_type: 10-K
+  url: https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/aapl-20260926.htm
+- id: msft-10k-2026
+  ticker: MSFT
+  doc_type: 10-K
+  url: https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm
+- id: nvda-10k-2026
+  ticker: NVDA
+  doc_type: 10-K
+  url: https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm
+
+- id: shy-factsheet
+  ticker: SHY
+  doc_type: fact_sheet
+  url: https://www.ishares.com/us/literature/fact-sheet/shy-ishares-1-3-year-treasury-bond-etf-fund-fact-sheet-en-us.pdf
+- id: agg-factsheet
+  ticker: AGG
+  doc_type: fact_sheet
+  url: https://www.ishares.com/us/literature/fact-sheet/agg-ishares-core-u-s-aggregate-bond-etf-fund-fact-sheet-en-us.pdf
+- id: tlt-factsheet
+  ticker: TLT
+  doc_type: fact_sheet
+  url: https://www.ishares.com/us/literature/fact-sheet/tlt-ishares-20-year-treasury-bond-etf-fund-fact-sheet-en-us.pdf
+- id: ivv-factsheet
+  ticker: IVV
+  doc_type: fact_sheet
+  url: https://www.ishares.com/us/literature/fact-sheet/ivv-ishares-core-s-p-500-etf-fund-fact-sheet-en-us.pdf
+
+- id: shy-prospectus
+  ticker: SHY
+  doc_type: summary_prospectus
+  url: https://www.ishares.com/us/literature/summary-prospectus/sp-ishares-1-3-year-treasury-bond-etf-2-28.pdf
+- id: agg-prospectus
+  ticker: AGG
+  doc_type: summary_prospectus
+  url: https://www.ishares.com/us/literature/summary-prospectus/sp-ishares-core-us-aggregate-bond-etf-2-28.pdf
+- id: tlt-prospectus
+  ticker: TLT
+  doc_type: summary_prospectus
+  url: https://www.ishares.com/us/literature/summary-prospectus/sp-ishares-20-plus-year-treasury-bond-etf-2-28.pdf
+- id: ivv-prospectus
+  ticker: IVV
+  doc_type: summary_prospectus
+  url: https://www.ishares.com/us/literature/summary-prospectus/sp-ishares-core-s-and-p-500-etf-3-31.pdf
+
+- id: sec-interest-rate-risk
+  doc_type: guide
+  url: https://www.sec.gov/files/ib_interestraterisk.pdf
+- id: sec-mutual-funds-etfs
+  doc_type: guide
+  url: https://www.sec.gov/investor/pubs/sec-guide-to-mutual-funds.pdf
+- id: sec-asset-allocation
+  doc_type: guide
+  url: https://www.sec.gov/investor/pubs/assetallocation.htm
+- id: investorgov-risk-tolerance
+  doc_type: guide
+  url: https://www.investor.gov/introduction-investing/getting-started/assessing-your-risk-tolerance
+  manual: true  # investor.gov bloquea descargas automáticas; se guarda a mano en data/raw/
+- id: sec-corporate-bonds
+  doc_type: guide
+  url: https://www.sec.gov/files/ib_corporatebonds.pdf
+- id: sec-etfs
+  doc_type: guide
+  url: https://www.sec.gov/files/etfs.pdf

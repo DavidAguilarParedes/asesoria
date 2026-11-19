@@ -1,0 +1,1 @@
+# Function tools del agente.
