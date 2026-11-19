@@ -103,48 +103,86 @@ def _print_reply(reply, show_tools: bool) -> None:
     if show_tools:
         for call in reply.tool_calls:
             args = ", ".join(f"{k}={v!r}" for k, v in call.arguments.items() if v is not None)
-            typer.secho(f"  · {call.tool}({args}) [{call.ms} ms]", fg="cyan")
-    if reply.blocked:
+            typer.secho(f"  · {call.tool}({args}) [{call.ms} ms, riesgo {call.riesgo}]", fg="cyan")
+    if show_tools and reply.model_calls:
+        total = sum(m.ms for m in reply.model_calls) / 1000
+        typer.secho(f"  · {len(reply.model_calls)} llamadas al modelo, {total:.1f} s", fg="cyan")
+    if reply.status == "blocked":
         typer.secho("  (bloqueado por el guardrail de relevancia)", fg="yellow")
     typer.echo(f"\nAsesorIA: {reply.text}\n")
+    for order in reply.pending:
+        r = order.resumen
+        lines = [
+            f"Comprar {r.get('cantidad')} {r.get('simbolo')} (orden de mercado, {r.get('cuenta')})",
+            f"Precio estimado: USD {r.get('precio_usd')}",
+            f"Costo estimado: USD {r.get('costo_estimado_usd')}",
+            f"Porcentaje del portafolio: {r.get('porcentaje_del_portafolio')}%",
+            f"Idoneidad: {r.get('idoneidad')}",
+        ]
+        typer.secho("  ORDEN PENDIENTE DE CONFIRMACIÓN", fg="yellow", bold=True)
+        for line in lines:
+            typer.secho(f"    {line}", fg="yellow")
+
+
+async def _session(client: str | None, use_mcp: bool):
+    """Abre el MCP de Alpaca (si se pide) y devuelve el contenedor y el asesor."""
+    from contextlib import AsyncExitStack
+
+    c = _container()
+    stack = AsyncExitStack()
+    mcp = await stack.enter_async_context(c.alpaca()) if use_mcp else None
+    advisor = c.advisor(mcp=mcp)
+    return c, advisor, stack
 
 
 @app.command()
-def ask(message: str, client: str | None = "c-002", tools: bool = True) -> None:
-    """Hace una sola pregunta al agente asesor."""
+def ask(message: str, client: str | None = "c-002", tools: bool = True, mcp: bool = True) -> None:
+    """Hace una sola pregunta. Si el agente propone una orden, queda sin ejecutar."""
     import asyncio
 
-    c = _container()
-    advisor = c.advisor()
-    session_id = advisor.start_session(client)
-    try:
-        reply = asyncio.run(advisor.ask(session_id, message))
-        _print_reply(reply, tools)
-    finally:
-        typer.echo(f"Costo: {c.save_costs('ask')}")
-        c.close()
+    async def run():
+        c, advisor, stack = await _session(client, mcp)
+        try:
+            session_id = advisor.start_session(client)
+            reply = await advisor.ask(session_id, message)
+            _print_reply(reply, tools)
+            if reply.pending:
+                typer.echo("(con `ask` las órdenes no se ejecutan; usa `chat` para confirmarlas)")
+        finally:
+            await stack.aclose()
+            typer.echo(f"Costo: {c.save_costs('ask')}")
+            c.close()
+
+    asyncio.run(run())
 
 
 @app.command()
-def chat(client: str | None = "c-002", tools: bool = True) -> None:
-    """Conversación con el agente en la terminal. Escribe 'salir' para terminar."""
+def chat(client: str | None = "c-002", tools: bool = True, mcp: bool = True) -> None:
+    """Conversación en la terminal. Escribe 'salir' para terminar."""
     import asyncio
 
-    c = _container()
-    advisor = c.advisor()
-    session_id = advisor.start_session(client)
-    typer.echo(f"Sesión {session_id} · cliente {client}. Escribe 'salir' para terminar.")
-    loop = asyncio.new_event_loop()
-    try:
-        while True:
-            message = typer.prompt("Tú")
-            if message.strip().lower() in {"salir", "exit", "quit"}:
-                break
-            _print_reply(loop.run_until_complete(advisor.ask(session_id, message)), tools)
-    finally:
-        loop.close()
-        typer.echo(f"Costo de la sesión: {c.save_costs('chat')}")
-        c.close()
+    async def run():
+        c, advisor, stack = await _session(client, mcp)
+        session_id = advisor.start_session(client)
+        typer.echo(f"Sesión {session_id} · cliente {client}. Escribe 'salir' para terminar.")
+        try:
+            while True:
+                message = await asyncio.to_thread(typer.prompt, "Tú")
+                if message.strip().lower() in {"salir", "exit", "quit"}:
+                    break
+                reply = await advisor.ask(session_id, message)
+                _print_reply(reply, tools)
+                while reply.pending:
+                    order = reply.pending[0]
+                    ok = await asyncio.to_thread(typer.confirm, "¿Confirmas la orden?")
+                    reply = await advisor.approve(session_id, order.approval_id, ok)
+                    _print_reply(reply, tools)
+        finally:
+            await stack.aclose()
+            typer.echo(f"Costo de la sesión: {c.save_costs('chat')}")
+            c.close()
+
+    asyncio.run(run())
 
 
 @app.command()

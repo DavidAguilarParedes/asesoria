@@ -119,10 +119,15 @@ def build_tools(
             symbol: f"{limits[asset_class]:.0%}"
             for symbol, asset_class in rules.instruments.items()
         }
+        max_usd = {
+            symbol: round(limits[asset_class] * profile.portfolio_value_usd, 2)
+            for symbol, asset_class in rules.instruments.items()
+        }
         return _json(
             {
                 **profile.model_dump(mode="json"),
                 "limite_por_instrumento": by_symbol,
+                "monto_maximo_usd_por_instrumento": max_usd,
                 "max_orden_usd": rules.max_order_usd,
                 "no_aptos": [s for s, pct in by_symbol.items() if pct == "0%"],
             }
@@ -201,7 +206,15 @@ def build_tools(
             return _json({"error": f"cliente {client_id} no existe"})
         order = Order(symbol=simbolo, qty=cantidad, est_price_usd=precio)
         result = check_order(profile, order, rules, posicion_actual_usd, poder_de_compra_usd)
-        return _json({**result.model_dump(mode="json"), "costo_estimado_usd": order.est_cost_usd})
+        cost = order.est_cost_usd
+        pct = finance.portfolio_pct(cost, profile.portfolio_value_usd) if cost else None
+        return _json(
+            {
+                **result.model_dump(mode="json"),
+                "costo_estimado_usd": cost,
+                "porcentaje_del_portafolio": pct,
+            }
+        )
 
     return [buscar_documentos, perfil_cliente, calculadora_financiera, validar_idoneidad]
 

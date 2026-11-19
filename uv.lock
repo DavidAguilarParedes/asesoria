@@ -274,6 +274,7 @@ dependencies = [
     { name = "pypdf" },
     { name = "pyyaml" },
     { name = "qdrant-client", extra = ["fastembed"] },
+    { name = "tenacity" },
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -315,6 +316,7 @@ requires-dist = [
     { name = "qdrant-client", extras = ["fastembed"], specifier = ">=1.20.0" },
     { name = "ragas", marker = "extra == 'eval'", specifier = ">=0.3.1" },
     { name = "sentence-transformers", marker = "extra == 'rerank'", specifier = ">=6.3.0" },
+    { name = "tenacity", specifier = ">=9.1.4,<10" },
     { name = "torch", marker = "extra == 'rerank'", specifier = ">=2.15.0", index = "https://download.pytorch.org/whl/cpu" },
     { name = "typer", specifier = ">=0.29.2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.54.0" },

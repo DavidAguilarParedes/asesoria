@@ -188,7 +188,7 @@ class Container:
             usage.get("output_token_count", 0),
         )
 
-    def advisor(self, guard: bool = True):
+    def advisor(self, guard: bool = True, mcp=None):
         from agent_framework.openai import OpenAIChatClient
 
         from asesoria.application.advisor import AdvisorService
@@ -199,23 +199,40 @@ class Container:
             model=self.settings.openai_chat_model,
             api_key=self.settings.openai_api_key.get_secret_value(),
         )
+        from asesoria.infrastructure.mcp_alpaca import RISK
+
+        rules = self.rules()
         tools = build_tools(
             retriever=self.retriever(self.agent_retrieval()),
             clients=self.clients(),
-            rules=self.rules(),
+            rules=rules,
             min_score=self.settings.rag_min_score,
         )
+        if mcp is not None:
+            tools.append(mcp)
         relevance = (
             LLMRelevanceChecker(self.llm, self.settings.openai_fast_model) if guard else None
         )
         return AdvisorService(
             chat_client=chat,
             tools=tools,
+            approved_symbols=rules.approved_symbols,
             relevance=relevance,
             trace_path=Path("logs/tool_calls.jsonl"),
+            risk_by_tool=RISK,
+            model_log_path=Path("logs/model_calls.jsonl"),
             on_usage=self.record_agent_usage,
-            options={"reasoning": {"effort": self.settings.agent_reasoning_effort}, "store": False},
+            options={
+                "reasoning": {"effort": self.settings.agent_reasoning_effort},
+                "store": False,
+                "allow_multiple_tool_calls": True,
+            },
         )
+
+    def alpaca(self):
+        from asesoria.infrastructure.mcp_alpaca import alpaca_mcp
+
+        return alpaca_mcp(self.settings)
 
     def close(self) -> None:
         for store in self._stores.values():
