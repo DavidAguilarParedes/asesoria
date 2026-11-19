@@ -178,7 +178,9 @@ class Container:
         return policies.read_rules(self.settings.data_dir / "policies")
 
     def agent_retrieval(self) -> RetrievalConfig:
-        return RetrievalConfig(mode="hybrid", rerank=True)
+        return RetrievalConfig(
+            mode="hybrid", rerank=True, contextual=self.settings.agent_contextual
+        )
 
     def record_agent_usage(self, usage: dict) -> None:
         self.tracker.add(

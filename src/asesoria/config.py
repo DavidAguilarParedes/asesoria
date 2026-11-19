@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     agent_reasoning_effort: str = "low"
     # Puntaje mínimo del reranker para considerar que hay evidencia
     rag_min_score: float = -2.0
+    # Si el agente busca en la colección con contexto por chunk (Contextual Retrieval)
+    agent_contextual: bool = False
 
     alpaca_api_key: SecretStr | None = None
     alpaca_secret_key: SecretStr | None = None

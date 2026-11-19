@@ -1,0 +1,11 @@
+config,cases,hit@5,mrr@5,recall@5,p50_ms,p95_ms,tokens_in,tokens_out,usd
+dense,31,0.806,0.676,0.774,13,33,0,0,0.0
+sparse,31,0.323,0.253,0.306,9,33,0,0,0.0
+hybrid,31,0.742,0.624,0.71,33,63,0,0,0.0
+hybrid+rerank,31,0.774,0.718,0.758,1773,1946,0,0,0.0
+hybrid+rewrite+rerank,31,0.839,0.713,0.839,2271,3677,0,0,0.0
+hybrid+hyde+rerank,31,0.742,0.672,0.726,2271,2473,0,0,0.0
+hybrid+decompose+rerank,31,0.871,0.728,0.855,2259,2462,0,0,0.0
+dense+contextual,31,0.871,0.724,0.855,17,51,0,0,0.0
+hybrid+contextual,31,0.806,0.672,0.774,53,60,0,0,0.0
+hybrid+contextual+rerank,31,0.806,0.71,0.806,2233,2327,0,0,0.0

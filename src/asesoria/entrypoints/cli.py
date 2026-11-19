@@ -219,9 +219,31 @@ def evaluate() -> None:
 
 
 @app.command()
-def ablation() -> None:
-    """Compara configuraciones del RAG."""
-    typer.echo("ablation: pendiente")
+def ablation(only: str | None = None) -> None:
+    """Compara configuraciones del RAG con el set de evaluación (results/ablation.*)."""
+    from evaluator.ablation import main
+
+    c = _container()
+    try:
+        main(c, only, log=typer.echo)
+    finally:
+        typer.echo(f"Costo: {c.save_costs('ablation')}")
+        c.close()
+
+
+@app.command("agent-queries")
+def agent_queries() -> None:
+    """Repite las búsquedas reales del agente en cada colección."""
+    import asyncio
+
+    from evaluator.agent_queries import main
+
+    c = _container()
+    try:
+        asyncio.run(main(c, log=typer.echo))
+    finally:
+        typer.echo(f"Costo: {c.save_costs('agent-queries')}")
+        c.close()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,288 @@
+{
+  "pol-01": [],
+  "pol-02": [
+    {
+      "consulta": "maximum order amount per order",
+      "tipo_documento": "policy"
+    }
+  ],
+  "pol-03": [
+    {
+      "consulta": "iShares 20+ Year Treasury ETF characteristics risk duration interest rate sensitivity",
+      "ticker": "TLT",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "pol-04": [
+    {
+      "consulta": "approved instruments pilot",
+      "tipo_documento": "policy"
+    }
+  ],
+  "pol-05": [
+    {
+      "consulta": "what to do if client's risk profile is unknown",
+      "ticker": "AGG",
+      "tipo_documento": "policy"
+    },
+    {
+      "consulta": "unknown client risk profile procedure",
+      "tipo_documento": "policy"
+    }
+  ],
+  "pol-06": [
+    {
+      "consulta": "short selling margin trading allowed policy",
+      "tipo_documento": "policy"
+    }
+  ],
+  "fs-01": [
+    {
+      "consulta": "expense ratio AGG expense ratio",
+      "ticker": "AGG",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "fs-02": [
+    {
+      "consulta": "effective duration TLT fund effective duration",
+      "ticker": "TLT",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "fs-03": [
+    {
+      "consulta": "duration SHY fund fact sheet",
+      "ticker": "SHY",
+      "tipo_documento": "fact_sheet"
+    },
+    {
+      "consulta": "duration TLT fund fact sheet",
+      "ticker": "TLT",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "fs-04": [
+    {
+      "consulta": "number of holdings and P/E of IVV",
+      "ticker": "IVV",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "fs-05": [
+    {
+      "consulta": "30-day SEC yield",
+      "ticker": "SHY",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "fs-06": [
+    {
+      "consulta": "index AGG tracks",
+      "ticker": "AGG",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "sp-01": [
+    {
+      "consulta": "duration interest rate sensitivity interest rate risk duration \"interest rate\"",
+      "ticker": "TLT",
+      "tipo_documento": "fact_sheet"
+    },
+    {
+      "consulta": "interest rate risk duration \"interest rate\"",
+      "ticker": "TLT",
+      "tipo_documento": "summary_prospectus"
+    },
+    {
+      "consulta": "duration \"duration\" interest rate sensitivity Treasury 20+ year",
+      "ticker": "TLT",
+      "tipo_documento": "summary_prospectus"
+    },
+    {
+      "consulta": "Interest Rate Risk \"Interest Rate Risk\" TLT \"Treasury\"",
+      "ticker": "TLT",
+      "tipo_documento": "summary_prospectus"
+    },
+    {
+      "consulta": "\"Interest Rate Risk\" \"duration\" \"TLT\"",
+      "ticker": "TLT",
+      "tipo_documento": null
+    }
+  ],
+  "sp-02": [
+    {
+      "consulta": "prepayment risk",
+      "ticker": "AGG",
+      "tipo_documento": "summary_prospectus"
+    },
+    {
+      "consulta": "prepayment",
+      "ticker": "AGG",
+      "tipo_documento": "summary_prospectus"
+    }
+  ],
+  "sp-03": [
+    {
+      "consulta": "investment objective SHY",
+      "ticker": "SHY",
+      "tipo_documento": "fact_sheet"
+    },
+    {
+      "consulta": "investment objective \"iShares 1-3 Year Treasury Bond ETF\" \"investment objective\"",
+      "ticker": "SHY",
+      "tipo_documento": "summary_prospectus"
+    }
+  ],
+  "sp-04": [
+    {
+      "consulta": "how to buy and sell shares of IVV trading shares purchase redemption secondary market ETFs creation redemption AP authorized participant",
+      "ticker": "IVV",
+      "tipo_documento": "summary_prospectus"
+    }
+  ],
+  "tk-01": [
+    {
+      "consulta": "customer concentration customers concentration NVIDIA",
+      "ticker": "NVDA",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "tk-02": [
+    {
+      "consulta": "export restrictions China export controls impact Nvidia sales China semiconductors restrictions export to China",
+      "ticker": "NVDA"
+    }
+  ],
+  "tk-03": [
+    {
+      "consulta": "who manufactures NVIDIA chips",
+      "ticker": "NVDA",
+      "tipo_documento": "10-K"
+    },
+    {
+      "consulta": "foundry TSMC Samsung NVIDIA fabless\"",
+      "ticker": "NVDA",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "tk-04": [
+    {
+      "consulta": "tariffs trade international tariffs trade restrictions customs duties Apple risks tariffs international trade",
+      "ticker": "AAPL",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "tk-05": [
+    {
+      "consulta": "total net sales 2026 Apple fiscal year total net sales",
+      "ticker": "AAPL",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "tk-06": [
+    {
+      "consulta": "Apple depends on compute for its artificial intelligence? compute capacity AI dependence Apple",
+      "ticker": "AAPL",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "tk-07": [
+    {
+      "consulta": "Microsoft relationship with OpenAI",
+      "ticker": "MSFT",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "tk-08": [
+    {
+      "consulta": "cybersecurity risk",
+      "ticker": "MSFT",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "tk-09": [
+    {
+      "consulta": "reporting segments Microsoft business segments report segments Microsoft 'Business segments' 'reportable segments'",
+      "ticker": "MSFT",
+      "tipo_documento": "10-K"
+    }
+  ],
+  "gd-01": [
+    {
+      "consulta": "interest rates bond prices inverse relationship duration interest rate risk",
+      "ticker": "TLT",
+      "tipo_documento": "fact_sheet"
+    },
+    {
+      "consulta": "interest rate risk bond prices inverse relationship duration",
+      "ticker": "AGG",
+      "tipo_documento": "fact_sheet"
+    },
+    {
+      "consulta": "interest rate risk duration bonds \"interest rate risk\"",
+      "ticker": "TLT",
+      "tipo_documento": "summary_prospectus"
+    },
+    {
+      "consulta": "interest rate risk duration bonds \"interest rate risk\" duration definition prospectus fund duration",
+      "ticker": "AGG",
+      "tipo_documento": "summary_prospectus"
+    },
+    {
+      "consulta": "When interest rates rise bond prices fall \"interest rates\" \"bond prices\" inverse",
+      "ticker": "TLT",
+      "tipo_documento": "guide"
+    },
+    {
+      "consulta": "interest rates rise bond prices fall \"interest rate risk\" \"value of bonds\"",
+      "ticker": "AGG",
+      "tipo_documento": "fact_sheet"
+    }
+  ],
+  "gd-02": [
+    {
+      "consulta": "investment grade bond definition",
+      "ticker": null,
+      "tipo_documento": "guide"
+    },
+    {
+      "consulta": "high yield bond definition",
+      "ticker": null,
+      "tipo_documento": "guide"
+    }
+  ],
+  "gd-03": [
+    {
+      "consulta": "ETF mutual fund differences buying trading intraday redemption creation shares",
+      "ticker": null,
+      "tipo_documento": "guide"
+    }
+  ],
+  "gd-04": [
+    {
+      "consulta": "portfolio rebalancing",
+      "ticker": null,
+      "tipo_documento": "guide"
+    }
+  ],
+  "gd-05": [
+    {
+      "consulta": "compound interest definition",
+      "ticker": null,
+      "tipo_documento": "guide"
+    },
+    {
+      "consulta": "compound interest",
+      "ticker": null,
+      "tipo_documento": null
+    }
+  ],
+  "bh-02": [
+    {
+      "consulta": "NVIDIA risk factors business description",
+      "ticker": "NVDA",
+      "tipo_documento": "10-K"
+    }
+  ]
+}

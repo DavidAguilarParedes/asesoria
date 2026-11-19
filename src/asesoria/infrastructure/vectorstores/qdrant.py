@@ -50,6 +50,16 @@ class QdrantStore(VectorStore):
             sparse_vectors_config={SPARSE: models.SparseVectorParams(modifier=models.Modifier.IDF)},
         )
 
+    def payloads(self) -> list[dict]:
+        rows, offset = [], None
+        while True:
+            points, offset = self.client.scroll(
+                self.collection, limit=500, offset=offset, with_payload=True, with_vectors=False
+            )
+            rows += [p.payload for p in points]
+            if offset is None:
+                return rows
+
     def index(self, ids, dense, sparse, payloads) -> None:
         sparse = sparse or [None] * len(ids)
         points = []

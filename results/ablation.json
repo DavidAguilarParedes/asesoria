@@ -1,0 +1,133 @@
+{
+  "summary": [
+    {
+      "config": "dense",
+      "cases": 31,
+      "hit@5": 0.806,
+      "mrr@5": 0.676,
+      "recall@5": 0.774,
+      "p50_ms": 13,
+      "p95_ms": 33,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "sparse",
+      "cases": 31,
+      "hit@5": 0.323,
+      "mrr@5": 0.253,
+      "recall@5": 0.306,
+      "p50_ms": 9,
+      "p95_ms": 33,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "hybrid",
+      "cases": 31,
+      "hit@5": 0.742,
+      "mrr@5": 0.624,
+      "recall@5": 0.71,
+      "p50_ms": 33,
+      "p95_ms": 63,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "hybrid+rerank",
+      "cases": 31,
+      "hit@5": 0.774,
+      "mrr@5": 0.718,
+      "recall@5": 0.758,
+      "p50_ms": 1773,
+      "p95_ms": 1946,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "hybrid+rewrite+rerank",
+      "cases": 31,
+      "hit@5": 0.839,
+      "mrr@5": 0.713,
+      "recall@5": 0.839,
+      "p50_ms": 2271,
+      "p95_ms": 3677,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "hybrid+hyde+rerank",
+      "cases": 31,
+      "hit@5": 0.742,
+      "mrr@5": 0.672,
+      "recall@5": 0.726,
+      "p50_ms": 2271,
+      "p95_ms": 2473,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "hybrid+decompose+rerank",
+      "cases": 31,
+      "hit@5": 0.871,
+      "mrr@5": 0.728,
+      "recall@5": 0.855,
+      "p50_ms": 2259,
+      "p95_ms": 2462,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "dense+contextual",
+      "cases": 31,
+      "hit@5": 0.871,
+      "mrr@5": 0.724,
+      "recall@5": 0.855,
+      "p50_ms": 17,
+      "p95_ms": 51,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "hybrid+contextual",
+      "cases": 31,
+      "hit@5": 0.806,
+      "mrr@5": 0.672,
+      "recall@5": 0.774,
+      "p50_ms": 53,
+      "p95_ms": 60,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    },
+    {
+      "config": "hybrid+contextual+rerank",
+      "cases": 31,
+      "hit@5": 0.806,
+      "mrr@5": 0.71,
+      "recall@5": 0.806,
+      "p50_ms": 2233,
+      "p95_ms": 2327,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "usd": 0.0
+    }
+  ],
+  "threshold": {
+    "threshold": -1.445,
+    "negatives_scores": [
+      4.028,
+      -2.961,
+      -2.97
+    ],
+    "negatives_blocked": "2 de 3"
+  }
+}
