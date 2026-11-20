@@ -52,7 +52,7 @@ def arrow(d, label="", lx=0, ly=0, dashed=False, hot=False):
 
 
 out.append(
-    f'<text x="40" y="52" font-size="28" font-weight="800" fill="#2c4547">Asesor<tspan fill="#ea6852">IA</tspan> · Arquitectura</text>'
+    '<text x="40" y="52" font-size="28" font-weight="800" fill="#2c4547">Asesor<tspan fill="#ea6852">IA</tspan> · Arquitectura</text>'
 )
 out.append(
     '<text x="40" y="80" font-size="15" fill="#5d6266">Agente asesor con RAG, MCP de Alpaca y aprobación humana · agente evaluador independiente</text>'
