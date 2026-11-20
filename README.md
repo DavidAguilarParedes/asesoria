@@ -29,6 +29,7 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Decisiones y trade-offs](#decisiones-y-trade-offs)
 - [Evidencia de ejecución](#evidencia-de-ejecución)
+- [Tiempo invertido](#tiempo-invertido)
 
 ## Arquitectura
 
@@ -324,3 +325,7 @@ tests/unit/           tests sin red
 **Video de la demo:** [docs/video/asesoria-demo-ensayo.mp4](docs/video/asesoria-demo-ensayo.mp4) (vista previa; ver la nota en [Demo](#demo)). Lo graba `scripts/grabar_video.py` y lo monta `scripts/montar_video.py` (tarjetas, cursor, esperas aceleradas y música). El guion está en [docs/guion-video.md](docs/guion-video.md).
 
 **Métricas exportadas por el agente evaluador:** [results/eval.json](results/eval.json), [results/eval_summary.csv](results/eval_summary.csv) y [results/eval_cases.csv](results/eval_cases.csv), con el análisis de fallos en [results/analisis.md](results/analisis.md).
+
+## Tiempo invertido
+
+Unas 8 horas.
