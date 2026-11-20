@@ -2,13 +2,21 @@
 
 ## Grabación automática
 
-`scripts/grabar_video.py` recorre este guion solo, con subtítulos en pantalla, y graba el video con Playwright y el Edge instalado. Con la app corriendo y **la bolsa abierta**, desde PowerShell en Windows:
+Dos pasos, con la app corriendo y **la bolsa abierta**:
 
-```powershell
-uv run --no-project --with playwright python \\wsl.localhost\Ubuntu\home\david\dev\asesoria\scripts\grabar_video.py --out $HOME\Videos\asesoria
-```
+1. **Grabar** (PowerShell en Windows; usa Playwright con el Edge instalado). Recorre el guion solo, con tarjetas de presentación, cursor visible, subtítulos y la aprobación de la orden destacada:
 
-El video queda en `Videos\asesoria` en formato `.webm`, que YouTube y Google Drive aceptan. Llama al agente real: cuesta unos USD 0.04 de API.
+   ```powershell
+   uv run --no-project --with playwright python \\wsl.localhost\Ubuntu\home\david\dev\asesoria\scripts\grabar_video.py --out $HOME\Videos\asesoria\toma
+   ```
+
+2. **Montar** (en WSL; necesita ffmpeg). Acelera ×4 las esperas del agente, agrega música suave generada por código y exporta `asesoria-demo.mp4`:
+
+   ```bash
+   uv run --no-project --with numpy --with pillow python scripts/montar_video.py /mnt/c/Users/david/Videos/asesoria/toma
+   ```
+
+Llama al agente real: cuesta unos USD 0.04 de API.
 
 ## Grabación manual
 
