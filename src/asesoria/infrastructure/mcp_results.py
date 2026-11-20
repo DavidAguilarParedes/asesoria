@@ -22,6 +22,8 @@ def _bars_summary(bars_by_symbol: dict) -> dict:
             "minimo": round(min(b["l"] for b in bars), 2),
             "maximo": round(max(b["h"] for b in bars), 2),
             "cierre_hace_20_barras": round(closes[-21], 2) if len(closes) > 20 else None,
+            # Un cierre por semana (cada 5 barras, terminando en el último): para el gráfico
+            "cierres_semanales": [round(c, 2) for c in closes[::-5][::-1]],
         }
     return summary
 

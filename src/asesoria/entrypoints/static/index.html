@@ -298,6 +298,39 @@
          background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; vertical-align: 2px; cursor: pointer; }
   .ref:hover { background: var(--accent); color: #fff; }
   .note { font-size: 12px; color: var(--muted); }
+  /* Tarjetas de la interfaz generativa */
+  .widgets { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .w { flex: 1 1 230px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow);
+       display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .w-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+  .w-head .verdict, .w-tag { white-space: nowrap; }
+  .w-tag { font-size: 11px; color: var(--muted); }
+  .w-price { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .w-price .big { font-size: 22px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .w-line { font-size: 13px; font-variant-numeric: tabular-nums; }
+  .w-foot { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chg { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .chg.up { color: var(--ok); } .chg.down { color: var(--no); }
+  .spark { width: 100%; height: 48px; overflow: visible; }
+  .spark polyline { fill: none; stroke: var(--teal); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .spark circle.hit { fill: transparent; cursor: default; }
+  .spark circle.hit:hover { fill: var(--teal); fill-opacity: .25; }
+  .spark circle.last { fill: var(--teal); stroke: var(--panel); stroke-width: 2; }
+  .suit .verdict { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+  .suit.ok .verdict { background: var(--ok-soft); color: var(--ok); }
+  .suit.no .verdict { background: var(--no-soft); color: var(--no); }
+  .limit { height: 8px; border-radius: 99px; background: #edf0f0; overflow: hidden; }
+  .limit i { display: block; height: 100%; border-radius: 99px; background: var(--teal); }
+  .suit.no .limit i { background: var(--no); }
+  .news, .profile { flex-basis: 100%; }
+  .lim-list { display: grid; gap: 6px; margin-top: 2px; }
+  .lim-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 130px; gap: 10px; align-items: center; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .lim-row span { color: var(--muted); text-align: right; }
+  .lim-row.off b, .lim-row.off span { color: var(--no); }
+  .n-item { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; margin: 0 -8px; border-radius: 8px; text-decoration: none; color: var(--text); }
+  a.n-item:hover { background: var(--bg); }
+  .n-title { font-size: 13px; font-weight: 550; line-height: 1.35; }
+  .n-meta { font-size: 11.5px; color: var(--muted); }
   .note::before { content: "· "; }
   .sources { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
   .sources b { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 650; }
@@ -618,8 +651,9 @@ function renderReply(reply) {
   log.querySelector(".welcome")?.remove();
   const box = el("div", "msg rich" + (reply.status === "blocked" ? " blocked" : ""));
   const next = renderRich(box, reply.text);
-  const body = botRow(reply.status === "blocked" ? "AsesorIA · fuera de tema" : "AsesorIA", reply.text);
+  const body = botRow(reply.status === "blocked" ? "AsesorIA · solicitud bloqueada" : "AsesorIA", reply.text);
   body.append(box);
+  renderWidgets(body, reply);
   renderTools(body, reply);
   reply.pending.forEach(renderOrder);
   if (next && !reply.pending.length) {
@@ -631,10 +665,174 @@ function renderReply(reply) {
   }
   // La respuesta entra por partes: cada párrafo, viñeta y bloque aparece después del anterior
   const parts = [...box.querySelectorAll(":scope > p, :scope > ul > li, :scope > .sources, :scope > .disclaimer"),
-                 ...body.querySelectorAll(".meta-row"), ...log.querySelectorAll(".order:not(.shown), .quick")];
+                 ...body.querySelectorAll(".widgets > .w, .meta-row"), ...log.querySelectorAll(".order:not(.shown), .quick")];
   parts.forEach((part, i) => { part.classList.add("rise"); part.style.animationDelay = `${i * 140}ms`; });
   log.querySelectorAll(".order").forEach(o => o.classList.add("shown"));
   scroll();
+}
+
+/* ---------- Interfaz generativa: tarjetas con los datos reales de cada tool ---------- */
+function toolData(call) {
+  try { const o = JSON.parse(call.result); return o.data ?? o; } catch { return null; }
+}
+const usd = (v) => "USD " + Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (v) => `${v > 0 ? "+" : ""}${v.toFixed(1)}%`;
+
+// Variación con flecha y signo (no solo color)
+function change(v, suffix) {
+  const c = el("span", "chg " + (v >= 0 ? "up" : "down"), `${v >= 0 ? "▲" : "▼"} ${pct(v)} ${suffix}`);
+  return c;
+}
+
+// Mini gráfico de los cierres semanales; cada punto tiene su valor al pasar el mouse
+function sparkline(closes) {
+  const w = 320, h = 48, pad = 4;
+  const min = Math.min(...closes), max = Math.max(...closes), span = max - min || 1;
+  const x = (i) => pad + (i * (w - 2 * pad)) / (closes.length - 1);
+  const y = (v) => h - pad - ((v - min) * (h - 2 * pad)) / span;
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.setAttribute("class", "spark");
+  const line = document.createElementNS(ns, "polyline");
+  line.setAttribute("points", closes.map((v, i) => `${x(i)},${y(v)}`).join(" "));
+  svg.append(line);
+  closes.forEach((v, i) => {
+    const dot = document.createElementNS(ns, "circle");
+    dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(v));
+    dot.setAttribute("r", i === closes.length - 1 ? 3.5 : 6);
+    dot.setAttribute("class", i === closes.length - 1 ? "last" : "hit");
+    const t = document.createElementNS(ns, "title");
+    t.textContent = `Semana ${i + 1}: ${usd(v)}`;
+    dot.append(t);
+    svg.append(dot);
+  });
+  return svg;
+}
+
+// Tarjeta de mercado por símbolo: precio (snapshot) + tendencia de 90 días (barras)
+function marketCards(calls) {
+  const bySymbol = {};
+  for (const c of calls) {
+    const d = toolData(c);
+    if (!c.ok || !d) continue;
+    if (c.tool === "get_stock_snapshot" || c.tool === "get_stock_latest_quote") {
+      for (const [sym, snap] of Object.entries(d)) if (snap?.latestTrade) (bySymbol[sym] ??= {}).snap = snap;
+    }
+    if (c.tool === "get_stock_bars" && d.resumen_barras) {
+      for (const [sym, bars] of Object.entries(d.resumen_barras)) (bySymbol[sym] ??= {}).bars = bars;
+    }
+  }
+  return Object.entries(bySymbol).map(([sym, { snap, bars }]) => {
+    const card = el("div", "w market");
+    const head = el("div", "w-head");
+    head.append(el("b", "", sym), el("span", "w-tag", "Mercado · Alpaca"));
+    card.append(head);
+    if (snap) {
+      const price = snap.latestTrade.p, prev = snap.prevDailyBar?.c;
+      const row = el("div", "w-price");
+      row.append(el("span", "big", usd(price)));
+      if (prev) row.append(change(((price - prev) / prev) * 100, "vs. cierre anterior"));
+      card.append(row);
+    }
+    if (bars?.cierres_semanales?.length > 1) {
+      card.append(sparkline(bars.cierres_semanales));
+      const foot = el("div", "w-foot");
+      foot.append(change(bars.cambio_pct, "en 90 días"), el("span", "", `Rango 90 días: ${usd(bars.minimo)} – ${usd(bars.maximo)}`));
+      card.append(foot);
+    } else if (snap?.dailyBar) {
+      card.append(el("div", "w-foot", `Rango del día ${usd(snap.dailyBar.l)} – ${usd(snap.dailyBar.h)}`));
+    }
+    return card;
+  });
+}
+
+// Idoneidad: cuánto del límite del perfil usa la compra
+function suitabilityCards(calls) {
+  const last = {};
+  for (const c of calls) if (c.tool === "validar_idoneidad" && c.ok) last[c.arguments.simbolo] = c;
+  return Object.values(last).map((c) => {
+    const d = toolData(c), a = c.arguments;
+    if (!d) return null;
+    const card = el("div", "w suit " + (d.approved ? "ok" : "no"));
+    const head = el("div", "w-head");
+    head.append(el("b", "", `Idoneidad · ${a.simbolo}`), el("span", "verdict", d.approved ? "✓ Apto" : "✗ No apto"));
+    card.append(head);
+    if (d.max_allowed_usd && d.costo_estimado_usd) {
+      const used = Math.min(d.costo_estimado_usd / d.max_allowed_usd, 1);
+      const meter = el("div", "limit"), fill = el("i");
+      fill.style.width = `${Math.round(used * 100)}%`;
+      meter.append(fill);
+      card.append(el("div", "w-line", `${usd(d.costo_estimado_usd)} de ${usd(d.max_allowed_usd)} permitidos`), meter);
+      const facts = [`${a.cantidad} ${a.cantidad === 1 ? "acción" : "acciones"}`];
+      if (d.porcentaje_del_portafolio != null) facts.push(`${d.porcentaje_del_portafolio}% de tu portafolio`);
+      if (d.cantidad_maxima_acciones != null) facts.push(`máximo ${d.cantidad_maxima_acciones}`);
+      card.append(el("div", "w-foot", facts.join(" · ")));
+    } else if (d.detail) {
+      card.append(el("div", "w-line", d.detail.charAt(0).toUpperCase() + d.detail.slice(1)));
+    }
+    return card;
+  }).filter(Boolean);
+}
+
+// Noticias: titular, fuente y fecha (texto externo: solo como texto, enlaces http)
+function newsCards(calls) {
+  const items = [];
+  for (const c of calls) {
+    const d = toolData(c);
+    if (c.tool === "get_news" && c.ok && d?.news) items.push(...d.news);
+  }
+  if (!items.length) return [];
+  const card = el("div", "w news");
+  const head = el("div", "w-head");
+  head.append(el("b", "", "Noticias"), el("span", "w-tag", "Alpaca"));
+  card.append(head);
+  for (const n of items.slice(0, 3)) {
+    const isLink = /^https?:\/\//.test(n.url || "");
+    const item = el(isLink ? "a" : "div", "n-item");
+    if (isLink) Object.assign(item, { href: n.url, target: "_blank", rel: "noopener" });
+    const date = new Date(n.created_at).toLocaleDateString("es-PE", { day: "numeric", month: "short" });
+    item.append(el("span", "n-title", n.headline), el("span", "n-meta", `${n.source} · ${date}`));
+    card.append(item);
+  }
+  return [card];
+}
+
+// Límites del perfil: los 7 instrumentos con su monto máximo (del resultado de perfil_cliente)
+function profileCard(calls) {
+  const call = calls.find(c => c.tool === "perfil_cliente" && c.ok);
+  const d = call && toolData(call);
+  if (!d?.monto_maximo_usd_por_instrumento) return [];
+  const max = Math.max(...Object.values(d.monto_maximo_usd_por_instrumento));
+  const card = el("div", "w profile");
+  const head = el("div", "w-head");
+  head.append(el("b", "", `Límites de tu perfil ${d.risk_profile}`), el("span", "w-tag", `Portafolio ${usd(d.portfolio_value_usd)}`));
+  card.append(head);
+  const list = el("div", "lim-list");
+  for (const [sym, amount] of Object.entries(d.monto_maximo_usd_por_instrumento)) {
+    const ok = amount > 0 && !(d.no_aptos || []).includes(sym);
+    const row = el("div", "lim-row" + (ok ? "" : " off"));
+    const bar = el("div", "limit"), fill = el("i");
+    fill.style.width = `${(amount / max) * 100}%`;
+    bar.append(fill);
+    row.append(el("b", "", sym), bar,
+               el("span", "", ok ? `${usd(amount).replace(".00", "")} · ${d.limite_por_instrumento[sym]}` : "No apto"));
+    list.append(row);
+  }
+  card.append(list);
+  return [card];
+}
+
+function renderWidgets(body, reply) {
+  const calls = reply.tool_calls || [];
+  const suitability = suitabilityCards(calls);
+  // El perfil completo solo se muestra cuando no hay una compra puntual validada
+  const profile = suitability.length ? [] : profileCard(calls);
+  const cards = [...marketCards(calls), ...suitability, ...profile, ...newsCards(calls)];
+  if (!cards.length) return;
+  const grid = el("div", "widgets");
+  grid.append(...cards);
+  body.append(grid);
 }
 
 // Fila del asesor: avatar a la izquierda, nombre y contenido a la derecha
@@ -1215,8 +1413,13 @@ const DOC_KIND = { policy: "Política", "10-K": "10-K", fact_sheet: "Fact sheet"
 function sourceName(src) {
   const d = docs.find(x => x.doc_id === src.docId) || {};
   const doc = d.ticker ? `${DOC_KIND[d.doc_type] || ""} ${d.ticker}`.trim() : src.docId.replace(/^(politica|sec)-/, "").replaceAll("-", " ");
-  let rest = src.cite.slice(src.docId.length).replace(/^[-,\s]+/, "");   // lo que sigue al id del documento
-  rest = rest.replace(/-\d+$/, "").replace(/^item(\d+[a-z]?)/i, "Item $1").replaceAll("-", " ");
+  const tail = src.cite.slice(src.docId.length);   // lo que sigue al id del documento
+  let rest = tail.replace(/^[-,\s]+/, "");
+  // Id de chunk ("-item7-12", "-fund-characteristics"): se quitan el número y los guiones.
+  // Cita con comas ("…, Fund Description, al 2026-06-30"): se deja tal cual
+  if (!tail.startsWith(",")) {
+    rest = rest.replace(/-\d+$/, "").replace(/^item(\d+[a-z]?)/i, "Item $1").replaceAll("-", " ");
+  }
   return rest ? `${doc} · ${rest.charAt(0).toUpperCase()}${rest.slice(1)}` : doc;
 }
 

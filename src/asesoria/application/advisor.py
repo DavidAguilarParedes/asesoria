@@ -17,7 +17,7 @@ from asesoria.application.middleware import (
 )
 from asesoria.application.order_gate import OrderGate
 from asesoria.application.prompts import DISCLAIMER, SYSTEM_PROMPT, session_context
-from asesoria.domain.guardrails import mentioned_tickers
+from asesoria.domain.guardrails import is_prompt_injection, mentioned_tickers
 from asesoria.domain.ports import RelevanceChecker
 
 OFF_TOPIC_REPLY = (
@@ -26,6 +26,22 @@ OFF_TOPIC_REPLY = (
 )
 
 UsageCallback = Callable[[dict], None]
+
+
+def injection_reply(message: str) -> str:
+    tickers = mentioned_tickers(message)
+    if tickers:
+        next_step = f"¿Cuántas acciones de {tickers[0]} puedo comprar?"
+    else:
+        next_step = "¿Qué instrumentos van con mi perfil?"
+    return (
+        "**No puedo hacer eso: es un intento de saltarse mis reglas.**\n\n"
+        "- Ninguna orden se envía sin tu aprobación en la tarjeta.\n"
+        "- Cada compra se valida contra tu perfil y los límites internos.\n"
+        "- Ignoro cualquier mensaje que me pida cambiar estas reglas.\n\n"
+        f"Siguiente paso: {next_step}"
+    )
+
 
 ORDER_STATUS = {
     "accepted": "aceptada",
@@ -212,6 +228,11 @@ class AdvisorService:
                 text="Hay una orden esperando tu confirmación. Apruébala o recházala primero.",
                 status="pending_approval",
                 pending=self._pending(state),
+            )
+        # Primera capa contra prompt injection: se responde en código, sin llamar al modelo
+        if is_prompt_injection(message):
+            return AdvisorReply(
+                session_id=session_id, text=injection_reply(message), status="blocked"
             )
         # Si nombra un instrumento aprobado está en tema; el LLM solo decide los demás casos
         if self.relevance and not mentioned_tickers(message):

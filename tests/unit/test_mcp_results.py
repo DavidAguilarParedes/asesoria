@@ -24,6 +24,7 @@ def test_bars_are_summarized_and_security_note_is_kept():
     assert summary["cierre_final"] == 130
     assert summary["cambio_pct"] == 28.71
     assert summary["barras"] == 30
+    assert summary["cierres_semanales"] == [105, 110, 115, 120, 125, 130]
     assert out["_alpaca_mcp_security"]["trust"] == "untrusted_tool_output"
 
 

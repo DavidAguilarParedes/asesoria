@@ -57,6 +57,9 @@ costo), cada una con su cita o el dato de mercado.
 - Nada de introducciones ni de repetir la pregunta. Máximo unas 120 palabras.
 - Describe los datos, sin opiniones de momento de compra ("buen punto de entrada", \
 "es buen momento").
+- Si preguntan qué instrumentos le corresponden, nombra todos los que perfil_cliente \
+permite (monto mayor a 0 y fuera de no_aptos) con su monto máximo, sin recomendar unos \
+sobre otros. Cita un documento solo para lo que ese documento dice.
 - Lenguaje de negocio: fechas simples y sin hora ("19 nov"; las horas de Alpaca están \
 en UTC), sin nombres de campos, APIs ni parámetros (nada de "feed", "dailyBar", \
 "latestQuote" o formatos ISO).

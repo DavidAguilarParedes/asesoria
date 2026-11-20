@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from asesoria.application import progress
 
 PATH = Path("data/demo/ejemplos.json")
+PRIVATE_TOOLS = {"get_account_info", "place_stock_order"}
 
 # Los mismos ejemplos de la barra lateral de la página (cliente, pregunta)
 EXAMPLES = [
@@ -58,10 +59,10 @@ async def record(advisor, client_id: str, question: str) -> Example | None:
     if reply.pending:
         return None
     data = reply.model_dump()
-    # La página solo usa el nombre y los argumentos de cada tool; sin resultados no se
-    # guardan datos de la cuenta
+    # Los resultados alimentan las tarjetas de la página; los de la cuenta no se guardan
     for call in data["tool_calls"]:
-        call["result"] = ""
+        if call["tool"] in PRIVATE_TOOLS:
+            call["result"] = ""
     return Example(client_id=client_id, question=question, events=events, reply=data)
 
 
