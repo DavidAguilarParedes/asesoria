@@ -11,6 +11,7 @@ Es un pipeline fijo (siempre los mismos pasos) para que dos corridas se puedan c
 import asyncio
 import csv
 import json
+import re
 import time
 from collections import defaultdict
 from datetime import datetime
@@ -81,8 +82,17 @@ def order_summary(pending) -> str:
     return "\n".join(lines)
 
 
+def hide_account(result: str) -> str:
+    """Tapa el número y el id de la cuenta de Alpaca antes de guardar los resultados."""
+    result = re.sub(r'("account_number":\s*")[^"]+', r"\1(oculto)", result)
+    return re.sub(r'("data":\s*\{"id":\s*")[^"]+', r"\1(oculto)", result)
+
+
 def as_call(tool_call) -> dict:
-    return {"tool": tool_call.tool, "arguments": tool_call.arguments, "result": tool_call.result}
+    result = tool_call.result
+    if tool_call.tool == "get_account_info":
+        result = hide_account(result)
+    return {"tool": tool_call.tool, "arguments": tool_call.arguments, "result": result}
 
 
 async def run_case(advisor, case: GoldenCase) -> CaseRun:

@@ -99,3 +99,12 @@ def test_resumen():
     assert s["mrr@5"] == 0.25
     assert s["faithfulness"] == 0.5
     assert s["n_faithfulness"] == 2
+
+
+def test_se_tapa_la_cuenta_de_alpaca():
+    from evaluator.run import hide_account
+
+    raw = '{"data": {"id": "abc-1111", "account_number": "PA123", "cash": "100000"}}'
+    out = hide_account(raw)
+    assert "PA123" not in out and "abc-1111" not in out
+    assert '"cash": "100000"' in out
