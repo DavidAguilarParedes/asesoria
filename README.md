@@ -4,7 +4,7 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 
 > Proyecto de demostración para el reto técnico AI Engineer de Credicorp Capital. Nada de lo que responde el agente constituye asesoría financiera real.
 
-## 🎬 Demo
+## Demo
 
 [![Demo de AsesorIA: el agente prepara una orden y espera la aprobación del asesor](docs/video/vista-previa.gif)](docs/video/asesoria-demo-ensayo.mp4)
 
@@ -16,7 +16,7 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 
 ## Contenido
 
-- [Demo](#-demo)
+- [Demo](#demo)
 - [Arquitectura](#arquitectura)
 - [Cómo funciona](#cómo-funciona)
 - [Base de conocimiento (RAG)](#base-de-conocimiento-rag)
@@ -29,7 +29,6 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Decisiones y trade-offs](#decisiones-y-trade-offs)
 - [Evidencia de ejecución](#evidencia-de-ejecución)
-- [Tiempo invertido](#tiempo-invertido)
 
 ## Arquitectura
 
@@ -320,10 +319,6 @@ tests/unit/           tests sin red
 
 ## Evidencia de ejecución
 
-**Video de la demo:** [docs/video/asesoria-demo-ensayo.mp4](docs/video/asesoria-demo-ensayo.mp4) (vista previa; ver la nota en [Demo](#-demo)). Lo graba `scripts/grabar_video.py` y lo monta `scripts/montar_video.py` (tarjetas, cursor, esperas aceleradas y música). El guion está en [docs/guion-video.md](docs/guion-video.md).
+**Video de la demo:** [docs/video/asesoria-demo-ensayo.mp4](docs/video/asesoria-demo-ensayo.mp4) (vista previa; ver la nota en [Demo](#demo)). Lo graba `scripts/grabar_video.py` y lo monta `scripts/montar_video.py` (tarjetas, cursor, esperas aceleradas y música). El guion está en [docs/guion-video.md](docs/guion-video.md).
 
 **Métricas exportadas por el agente evaluador:** [results/eval.json](results/eval.json), [results/eval_summary.csv](results/eval_summary.csv) y [results/eval_cases.csv](results/eval_cases.csv), con el análisis de fallos en [results/analisis.md](results/analisis.md).
-
-## Tiempo invertido
-
-**[COMPLETAR]** horas en total. Referencia: el historial de git va del 19 al 20 de noviembre de 2026, más el tiempo previo de diseño y pruebas.
