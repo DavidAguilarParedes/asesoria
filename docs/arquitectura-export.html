@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Exportar diagrama</title>
+<style>body{margin:0;background:#fff} svg{display:block}</style>
+<script src="https://cdn.jsdelivr.net/npm/@excalidraw/utils@0.1.2/dist/excalidraw-utils.min.js"></script></head>
+<body>
+<!-- Dibuja arquitectura.excalidraw con el motor de Excalidraw (servir la carpeta docs/ por HTTP) -->
+<div id="out"></div>
+<script>
+  (async () => {
+    const scene = await (await fetch("arquitectura.excalidraw")).json();
+    const svg = await ExcalidrawUtils.exportToSvg({
+      elements: scene.elements,
+      appState: { ...scene.appState, exportBackground: true, exportPadding: 24 },
+      files: {},
+    });
+    document.getElementById("out").append(svg);
+    document.title = "listo";
+  })().catch(e => { document.title = "error: " + e.message; console.error(e); });
+</script>
+</body></html>

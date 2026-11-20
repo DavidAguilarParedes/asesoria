@@ -34,6 +34,8 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 
 ![Arquitectura de AsesorIA](docs/arquitectura.png)
 
+El diagrama se puede abrir y editar en [Excalidraw](https://excalidraw.com): [docs/arquitectura.excalidraw](docs/arquitectura.excalidraw).
+
 <details>
 <summary>Versión en Mermaid (detalle de conexiones)</summary>
 
