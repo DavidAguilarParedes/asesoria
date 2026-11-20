@@ -13,12 +13,15 @@ from pathlib import Path
 OUT = Path("docs/arquitectura.excalidraw")
 random.seed(7)
 
-INK, MUTED = "#1e1e1e", "#5d6266"
-COLORS = {  # relleno de cada tipo de caja
-    "box": "#e6eeee",
-    "hot": "#ffe3dd",
-    "store": "#c3d9db",
-    "user": "#f3d9a4",
+INK, MUTED = "#22313a", "#5d6266"
+ROUGHNESS = 0  # trazos limpios (1 = dibujado a mano)
+FONT = 2  # 1 = manuscrita (Virgil), 2 = normal (Helvetica)
+# Por tipo de caja: relleno, borde, color del título y del subtítulo
+STYLES = {
+    "box": ("#eef3f3", "#5a8084", INK, MUTED),
+    "hot": ("#fdeeeb", "#e8684f", INK, "#8a4a3d"),
+    "store": ("#3a5a5d", "#2c4547", "#ffffff", "#d5e2e3"),
+    "user": ("#2c4547", "#2c4547", "#ffffff", "#d5e2e3"),
 }
 elements = []
 
@@ -35,9 +38,9 @@ def base(kind: str, x: float, y: float, w: float, h: float, **extra) -> dict:
         "strokeColor": INK,
         "backgroundColor": "transparent",
         "fillStyle": "solid",
-        "strokeWidth": 2,
+        "strokeWidth": 1.5,
         "strokeStyle": "solid",
-        "roughness": 1,
+        "roughness": ROUGHNESS,
         "opacity": 100,
         "groupIds": [],
         "frameId": None,
@@ -52,6 +55,10 @@ def base(kind: str, x: float, y: float, w: float, h: float, **extra) -> dict:
         "locked": False,
     }
     element.update(extra)
+    # Versiones antiguas de Excalidraw usan strokeSharpness en lugar de roundness
+    element["strokeSharpness"] = (
+        "round" if element["roundness"] and kind == "rectangle" else "sharp"
+    )
     elements.append(element)
     return element
 
@@ -60,7 +67,7 @@ def text(
     x: float, y: float, value: str, size: int = 20, color: str = INK, align: str = "center"
 ) -> None:
     lines = value.split("\n")
-    w = max(len(line) for line in lines) * size * 0.56
+    w = max(len(line) for line in lines) * size * 0.54
     h = len(lines) * size * 1.25
     left = x - w / 2 if align == "center" else x
     base(
@@ -72,7 +79,7 @@ def text(
         text=value,
         originalText=value,
         fontSize=size,
-        fontFamily=1,
+        fontFamily=FONT,
         textAlign=align,
         verticalAlign="top",
         containerId=None,
@@ -84,12 +91,12 @@ def text(
 
 
 def box(x, y, w, h, title, sub="", kind="box") -> None:
-    shape = "ellipse" if kind == "user" else "rectangle"
-    base(shape, x, y, w, h, backgroundColor=COLORS[kind], roundness={"type": 3})
-    top = y + h / 2 - (22 if sub else 13)
-    text(x + w / 2, top, title, 20)
+    fill, stroke, title_color, sub_color = STYLES[kind]
+    base("rectangle", x, y, w, h, backgroundColor=fill, strokeColor=stroke, roundness={"type": 2})
+    top = y + h / 2 - (21 if sub else 12)
+    text(x + w / 2, top, title, 19, title_color)
     if sub:
-        text(x + w / 2, top + 28, sub, 15, MUTED)
+        text(x + w / 2, top + 27, sub, 14, sub_color)
 
 
 def group(x, y, w, h, title, bottom=False) -> None:
@@ -99,13 +106,12 @@ def group(x, y, w, h, title, bottom=False) -> None:
         y,
         w,
         h,
-        backgroundColor="#f7f9f9",
-        strokeStyle="dashed",
-        strokeColor="#8fb0b3",
-        roundness={"type": 3},
+        backgroundColor="#f8fafa",
+        strokeColor="#c5d6d7",
+        roundness=None,
         strokeWidth=1,
     )
-    text(x + 18, y + h - 34 if bottom else y + 12, title, 17, "#3a5a5d", align="left")
+    text(x + 18, y + h - 32 if bottom else y + 14, title.upper(), 14, "#5a8084", align="left")
 
 
 def arrow(points, label="", at=None, dashed=False, hot=False) -> None:
@@ -119,20 +125,33 @@ def arrow(points, label="", at=None, dashed=False, hot=False) -> None:
         max(xs) - min(xs),
         max(ys) - min(ys),
         points=rel,
-        strokeColor="#e8590c" if hot else "#3a5a5d",
+        strokeColor="#e8684f" if hot else "#5a8084",
         strokeStyle="dashed" if dashed else "solid",
         startArrowhead=None,
         endArrowhead="arrow",
         startBinding=None,
         endBinding=None,
         lastCommittedPoint=None,
-        roundness={"type": 2},
+        roundness=None,
     )
     if label:
-        text(at[0], at[1], label, 15, "#e8590c" if hot else "#3a5a5d")
+        text(at[0], at[1], label, 14, "#c4523e" if hot else "#5a8084")
 
 
-text(40, 26, "AsesorIA · Arquitectura", 36, "#2c4547", align="left")
+text(40, 26, "AsesorIA · Arquitectura", 34, "#2c4547", align="left")
+for i, (kind, label) in enumerate(
+    [
+        ("box", "Componente"),
+        ("hot", "Control: seguridad y aprobación"),
+        ("store", "Datos y servicios externos"),
+    ]
+):
+    lx = [1060, 1230, 1530][i]
+    fill, stroke, _, _ = STYLES[kind]
+    base(
+        "rectangle", lx, 40, 22, 22, backgroundColor=fill, strokeColor=stroke, roundness={"type": 2}
+    )
+    text(lx + 30, 42, label, 14, MUTED, align="left")
 text(
     40,
     76,
