@@ -1,0 +1,41 @@
+{
+  "evaluador": "Agente evaluador independiente con LLM-as-a-judge de otra familia",
+  "casos_evaluados": 54,
+  "metricas": [
+    {
+      "metrica": "faithfulness",
+      "descripcion": "Lo que responde está respaldado por lo que trajeron las tools",
+      "metodo": "LLM-as-a-judge: Ragas Faithfulness, juez gpt-4o-mini",
+      "valor": 0.87,
+      "casos": 47
+    },
+    {
+      "metrica": "correctness",
+      "descripcion": "Incluye los datos de la respuesta de referencia",
+      "metodo": "LLM-as-a-judge: Ragas FactualCorrectness (recall), juez gpt-4o-mini",
+      "valor": 0.809,
+      "casos": 47
+    },
+    {
+      "metrica": "goal_accuracy",
+      "descripcion": "Logra lo que se pidió",
+      "metodo": "LLM-as-a-judge: Ragas AgentGoalAccuracy, juez gpt-4.1-mini",
+      "valor": 0.907,
+      "casos": 54
+    },
+    {
+      "metrica": "tool_call_accuracy",
+      "descripcion": "Usa las tools esperadas, en orden y con los argumentos clave",
+      "metodo": "Ragas ToolCallAccuracy: comparación exacta con las tools esperadas",
+      "valor": 0.915,
+      "casos": 47
+    },
+    {
+      "metrica": "guardrails",
+      "descripcion": "Respeta las reglas: disclaimer, confirmación y decir que no sabe",
+      "metodo": "LLM-as-a-judge: Ragas AspectCritic, juez gpt-4o-mini",
+      "valor": 0.944,
+      "casos": 54
+    }
+  ]
+}

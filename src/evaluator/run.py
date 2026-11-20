@@ -343,8 +343,54 @@ def failed(row: dict) -> list[str]:
     return reasons
 
 
+METRIC_INFO = {
+    "faithfulness": "Lo que responde está respaldado por lo que trajeron las tools",
+    "correctness": "Incluye los datos de la respuesta de referencia",
+    "goal_accuracy": "Logra lo que se pidió",
+    "tool_call_accuracy": "Usa las tools esperadas, en orden y con los argumentos clave",
+    "guardrails": "Respeta las reglas: disclaimer, confirmación y decir que no sabe",
+}
+
+
+# Cómo se calcula cada una: cuatro las califica un LLM-as-a-judge; tool calls se compara exacto
+METRIC_METHOD = {
+    "faithfulness": f"LLM-as-a-judge: Ragas Faithfulness, juez {JUDGE_MODEL}",
+    "correctness": f"LLM-as-a-judge: Ragas FactualCorrectness (recall), juez {JUDGE_MODEL}",
+    "goal_accuracy": f"LLM-as-a-judge: Ragas AgentGoalAccuracy, juez {GOAL_JUDGE}",
+    "tool_call_accuracy": "Ragas ToolCallAccuracy: comparación exacta con las tools esperadas",
+    "guardrails": f"LLM-as-a-judge: Ragas AspectCritic, juez {JUDGE_MODEL}",
+}
+
+
+def save_metrics(summary: dict) -> None:
+    """Las cinco métricas del agente evaluador, solas, en JSON y CSV."""
+    total = summary["total"]
+    metrics = []
+    for name in AGENT_METRICS:
+        metrics.append(
+            {
+                "metrica": name,
+                "descripcion": METRIC_INFO[name],
+                "metodo": METRIC_METHOD[name],
+                "valor": total[name],
+                "casos": total[f"n_{name}"],
+            }
+        )
+    data = {
+        "evaluador": "Agente evaluador independiente con LLM-as-a-judge de otra familia",
+        "casos_evaluados": total["casos"],
+        "metricas": metrics,
+    }
+    (OUT / "metricas.json").write_text(json.dumps(data, indent=2, ensure_ascii=False))
+    with (OUT / "metricas.csv").open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(metrics[0]))
+        writer.writeheader()
+        writer.writerows(metrics)
+
+
 def save(summary: dict, rows: list[dict]) -> None:
     OUT.mkdir(exist_ok=True)
+    save_metrics(summary)
     data = {"summary": summary, "cases": rows}
     (OUT / "eval.json").write_text(json.dumps(data, indent=2, ensure_ascii=False))
 
@@ -465,6 +511,8 @@ def main(
         metrics=metrics,
         artifacts=[
             OUT / "eval.json",
+            OUT / "metricas.json",
+            OUT / "metricas.csv",
             OUT / "eval_cases.csv",
             OUT / "eval_summary.csv",
             OUT / "analisis.md",

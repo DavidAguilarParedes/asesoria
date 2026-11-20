@@ -1,0 +1,6 @@
+metrica,descripcion,metodo,valor,casos
+faithfulness,Lo que responde está respaldado por lo que trajeron las tools,"LLM-as-a-judge: Ragas Faithfulness, juez gpt-4o-mini",0.87,47
+correctness,Incluye los datos de la respuesta de referencia,"LLM-as-a-judge: Ragas FactualCorrectness (recall), juez gpt-4o-mini",0.809,47
+goal_accuracy,Logra lo que se pidió,"LLM-as-a-judge: Ragas AgentGoalAccuracy, juez gpt-4.1-mini",0.907,54
+tool_call_accuracy,"Usa las tools esperadas, en orden y con los argumentos clave",Ragas ToolCallAccuracy: comparación exacta con las tools esperadas,0.915,47
+guardrails,"Respeta las reglas: disclaimer, confirmación y decir que no sabe","LLM-as-a-judge: Ragas AspectCritic, juez gpt-4o-mini",0.944,54

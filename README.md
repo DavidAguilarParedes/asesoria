@@ -19,7 +19,7 @@ Asistente para asesores de inversiones construido con Microsoft Agent Framework.
 - [Demo](#demo)
 - [Cómo probarlo](#cómo-probarlo)
 - [Arquitectura](#arquitectura)
-- [Cómo funciona](#cómo-funciona)
+- [Flujo de ejecución](#flujo-de-ejecución)
 - [Base de conocimiento (RAG)](#base-de-conocimiento-rag)
 - [Agente asesor](#agente-asesor)
 - [Guardrails y seguridad](#guardrails-y-seguridad)
@@ -88,7 +88,7 @@ Cada respuesta tiene el botón *Evaluar con el juez* y el enlace a su conversaci
 docker compose exec app asesoria eval
 ```
 
-Corre los 54 casos contra el asesor (unos 10 minutos y cerca de USD 0.25) y actualiza `results/eval.json`, `results/eval_summary.csv` y `results/eval_cases.csv`. Las órdenes que propone el asesor durante la evaluación se rechazan siempre.
+Corre los 54 casos contra el asesor (unos 10 minutos y cerca de USD 0.25) y actualiza `results/metricas.json`, `results/metricas.csv` y el detalle por caso. Las órdenes que propone el asesor durante la evaluación se rechazan siempre.
 
 ### Si algo falla
 
@@ -151,7 +151,39 @@ flowchart LR
 | Observabilidad | Trazas OpenTelemetry de Agent Framework → MLflow; logs JSONL de tools y del modelo |
 | Despliegue | Docker Compose: app + Qdrant + MLflow |
 
-## Cómo funciona
+## Flujo de ejecución
+
+Lo que pasa con cada mensaje del asesor:
+
+1. La página envía la pregunta a `POST /chat/stream`, con la sesión y el cliente seleccionado.
+2. Un filtro en código revisa si es un intento de prompt injection. Si lo es, responde al instante sin llamar al modelo.
+3. Si la pregunta no nombra un instrumento aprobado, `gpt-5-nano` decide si está en tema.
+4. El agente (`gpt-5-mini`, Microsoft Agent Framework) recibe la pregunta, el historial de la sesión y el ID del cliente, y decide qué herramientas usar. Las que no dependen entre sí las pide en paralelo.
+5. Cada llamada a una herramienta pasa por dos middleware: uno la registra (entrada, salida y duración) y avisa a la página para mostrar el paso; el otro bloquea cualquier orden que no haya pasado la validación de idoneidad.
+6. Si el agente pide `place_stock_order`, Agent Framework la retiene y la API devuelve la orden pendiente. La página muestra la tarjeta y el asesor decide con `POST /chat/approve`. Solo con la aprobación se envía a Alpaca.
+7. La respuesta llega con sus citas, y el turno completo queda como traza en MLflow.
+
+```mermaid
+sequenceDiagram
+    participant A as Asesor
+    participant API as API FastAPI
+    participant G as Guardrails
+    participant AG as Agente gpt-5-mini
+    participant T as Tools locales
+    participant M as MCP Alpaca
+    A->>API: POST /chat/stream (pregunta, sesión, cliente)
+    API->>G: ¿prompt injection o fuera de tema?
+    G-->>API: en tema
+    API->>AG: pregunta + historial + cliente
+    AG->>T: buscar_documentos, perfil_cliente, validar_idoneidad
+    AG->>M: precio, tendencia, noticias
+    AG->>API: place_stock_order (queda retenida)
+    API-->>A: tarjeta de la orden: Aprobar / Rechazar
+    A->>API: POST /chat/approve (aprobada)
+    API->>M: envía la orden a la cuenta paper
+    M-->>API: respuesta de Alpaca
+    API-->>A: confirmación con el estado de la orden
+```
 
 Los tres escenarios del reto, tal como los resuelve el agente:
 
@@ -244,19 +276,19 @@ Un agente separado (`src/evaluator/`), que no participa en la asesoría, corre u
 
 Dataset: 54 casos (`data/eval/`): 41 escritos a mano y 13 generados con Ragas a partir de personas. Son preguntas sobre los documentos (single-hop y multi-hop), casos sin evidencia y casos de comportamiento (órdenes, idoneidad, prompt injection). Cada caso trae la respuesta de referencia y la evidencia esperada (documento, sección, página o frase), lo que permite medir también la recuperación. Las órdenes que propone el asesor durante la evaluación se rechazan siempre: el evaluador nunca ejecuta nada.
 
-Cinco métricas (LLM-as-a-judge con Ragas; el juez es de otra familia que el asesor para que no se califique a sí mismo):
+Cinco métricas, calculadas con Ragas. Cuatro las califica un LLM-as-a-judge de otra familia que el asesor (GPT-4 frente a GPT-5), para que el modelo no se califique a sí mismo. La de tools se calcula comparando de forma exacta las tools llamadas con las esperadas:
 
-| Métrica | Qué mide | Resultado |
-|---|---|---|
-| Faithfulness | Lo que responde está respaldado por lo que trajeron las tools | 0.87 |
-| Correctness | Incluye los datos de la respuesta de referencia | 0.81 |
-| Goal accuracy | Logra lo que se pidió | 0.91 |
-| Tool call accuracy | Usa las tools esperadas, en orden y con los argumentos clave | 0.92 |
-| Guardrails | Respeta las reglas: disclaimer, confirmación, decir que no sabe | 0.94 |
+| Métrica | Qué mide | Cómo se mide | Resultado |
+|---|---|---|---|
+| Faithfulness | Lo que responde está respaldado por lo que trajeron las tools | Juez `gpt-4o-mini` | 0.87 |
+| Correctness | Incluye los datos de la respuesta de referencia | Juez `gpt-4o-mini` | 0.81 |
+| Goal accuracy | Logra lo que se pidió | Juez `gpt-4.1-mini` | 0.91 |
+| Tool call accuracy | Usa las tools esperadas, en orden y con los argumentos clave | Comparación exacta | 0.92 |
+| Guardrails | Respeta las reglas: disclaimer, confirmación, decir que no sabe | Juez `gpt-4o-mini` | 0.94 |
 
 Recuperación con las búsquedas reales del agente: Hit@5 0.91, MRR@5 0.81. Latencia mediana por caso: 8.4 s. Errores: 0.
 
-Archivos exportados (`results/`): `eval.json` (resumen y casos), `eval_summary.csv` (por grupo), `eval_cases.csv` (por caso), `eval_runs.json` (conversaciones completas) y `analisis.md` (análisis de fallos que escribe un agente intérprete). Cada corrida también queda como run en MLflow.
+Archivos exportados (`results/`): `metricas.json` y `metricas.csv` (las cinco métricas con su método), `eval.json` (resumen y casos), `eval_summary.csv` (por grupo), `eval_cases.csv` (por caso), `eval_runs.json` (conversaciones completas) y `analisis.md` (análisis de fallos que escribe un agente intérprete). Cada corrida también queda como run en MLflow.
 
 Análisis de fallos. Un agente intérprete agrupa los casos que fallan por causa en `results/analisis.md`:
 
@@ -380,7 +412,7 @@ tests/unit/           tests sin red
 
 Video de la demo: [docs/video/asesoria-demo-ensayo.mp4](docs/video/asesoria-demo-ensayo.mp4) (vista previa; ver la nota en [Demo](#demo)). Lo graba `scripts/grabar_video.py` y lo monta `scripts/montar_video.py` (tarjetas, cursor, esperas aceleradas y música). El guion está en [docs/guion-video.md](docs/guion-video.md).
 
-Métricas exportadas por el agente evaluador: [results/eval.json](results/eval.json), [results/eval_summary.csv](results/eval_summary.csv) y [results/eval_cases.csv](results/eval_cases.csv), con el análisis de fallos en [results/analisis.md](results/analisis.md).
+Las cinco métricas del agente evaluador: [results/metricas.json](results/metricas.json) y [results/metricas.csv](results/metricas.csv). El detalle por grupo y por caso está en [results/eval_summary.csv](results/eval_summary.csv), [results/eval_cases.csv](results/eval_cases.csv) y [results/eval.json](results/eval.json), y el análisis de fallos en [results/analisis.md](results/analisis.md).
 
 ## Tiempo invertido
 
