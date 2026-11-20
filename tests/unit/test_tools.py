@@ -100,6 +100,8 @@ def test_suitability_tool_returns_reason_and_max_allowed():
     assert out["reason"] == "EXCEDE_LIMITE_DE_CONCENTRACION"
     assert out["max_allowed_usd"] == 1000
     assert out["costo_estimado_usd"] == 3000
+    # 1000 / 150 = 6.67: caben 6 acciones
+    assert out["cantidad_maxima_acciones"] == 6
 
 
 def test_calculator_reports_missing_data_instead_of_crashing():

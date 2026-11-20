@@ -6,10 +6,12 @@ from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
+from asesoria.application import progress
 from asesoria.application.advisor import AdvisorReply
+from asesoria.entrypoints import examples
 from asesoria.infrastructure.llm import BudgetExceeded
 
 STATIC = Path(__file__).parent / "static"
@@ -199,22 +201,60 @@ def create_app(advisor=None, clients=None, chunks=None) -> FastAPI:
             raise HTTPException(404, "Todavía no existe el análisis")
         return {"markdown": path.read_text(encoding="utf-8")}
 
-    @app.post("/chat")
-    async def chat(body: ChatRequest, request: Request) -> AdvisorReply:
+    def open_session(body: ChatRequest, request: Request) -> str:
+        """Devuelve la sesión del mensaje, o crea una nueva para el cliente."""
         advisor = advisor_of(request)
-        session_id = body.session_id
-        if session_id is None:
+        if body.session_id is None:
             repo = request.app.state.clients
             if body.client_id and repo and repo.get(body.client_id) is None:
                 raise HTTPException(404, f"El cliente {body.client_id} no existe")
-            session_id = advisor.start_session(body.client_id)
-        elif advisor.get_state(session_id) is None:
-            raise HTTPException(404, f"La sesión {session_id} no existe")
+            return advisor.start_session(body.client_id)
+        if advisor.get_state(body.session_id) is None:
+            raise HTTPException(404, f"La sesión {body.session_id} no existe")
+        return body.session_id
+
+    @app.post("/chat")
+    async def chat(body: ChatRequest, request: Request) -> AdvisorReply:
+        advisor = advisor_of(request)
+        session_id = open_session(body, request)
         async with locks[session_id]:
             try:
                 return await advisor.ask(session_id, body.message)
             except BudgetExceeded as e:
                 raise HTTPException(503, str(e)) from e
+
+    @app.post("/chat/stream")
+    async def chat_stream(body: ChatRequest, request: Request) -> StreamingResponse:
+        """Como /chat, pero va enviando cada tool que usa el agente (una línea JSON por aviso)."""
+        advisor = advisor_of(request)
+        session_id = open_session(body, request)
+
+        # Primer mensaje de un ejemplo de la página: se repite la respuesta grabada
+        example = examples.find(body.client_id, body.message) if body.session_id is None else None
+        if example is not None:
+
+            async def replayed():
+                async for event in examples.replay(example, session_id):
+                    yield json.dumps(event, ensure_ascii=False) + "\n"
+
+            return StreamingResponse(replayed(), media_type="application/x-ndjson")
+
+        async def events():
+            async with locks[session_id]:
+                queue = progress.listen()
+                task = asyncio.create_task(advisor.ask(session_id, body.message))
+                async for event in progress.events(task, queue):
+                    yield json.dumps(event, ensure_ascii=False, default=str) + "\n"
+                try:
+                    reply = task.result()
+                    last = {"type": "reply", "reply": reply.model_dump()}
+                except BudgetExceeded as e:
+                    last = {"type": "error", "detail": str(e)}
+                except Exception as e:
+                    last = {"type": "error", "detail": f"No pude completar la consulta: {e}"}
+                yield json.dumps(last, ensure_ascii=False) + "\n"
+
+        return StreamingResponse(events(), media_type="application/x-ndjson")
 
     @app.post("/chat/approve")
     async def approve(body: ApproveRequest, request: Request) -> AdvisorReply:

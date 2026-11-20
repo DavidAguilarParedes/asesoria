@@ -226,6 +226,34 @@ def costs() -> None:
     typer.echo(f"{len(rows)} comandos · {sum(r['calls'] for r in rows)} llamadas · USD {total:.4f}")
 
 
+@app.command("grabar-ejemplos")
+def record_examples(mcp: bool = True) -> None:
+    """Corre los ejemplos de la página con el agente real y guarda sus respuestas."""
+    import asyncio
+
+    from asesoria.entrypoints import examples
+
+    async def run():
+        c, advisor, stack = await _session(None, mcp)
+        try:
+            recorded = []
+            for client_id, question in examples.EXAMPLES:
+                example = await examples.record(advisor, client_id, question)
+                if example is None:
+                    typer.secho(f"  {question} → propuso una orden: queda en vivo", fg="yellow")
+                    continue
+                recorded.append(example)
+                typer.echo(f"  ✓ {question}\n{example.reply['text']}\n")
+            examples.save(recorded)
+            typer.echo(f"Guardados {len(recorded)} ejemplos en {examples.PATH}")
+        finally:
+            await stack.aclose()
+            typer.echo(f"Costo: {c.save_costs('grabar-ejemplos')}")
+            c.close()
+
+    asyncio.run(run())
+
+
 @app.command()
 def serve(host: str = "0.0.0.0", port: int = 8000, mcp: bool = True) -> None:
     """Levanta la API y la página de demo en http://localhost:8000."""

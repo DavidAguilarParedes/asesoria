@@ -211,11 +211,16 @@ def build_tools(
         result = check_order(profile, order, rules, posicion_actual_usd, poder_de_compra_usd)
         cost = order.est_cost_usd
         pct = finance.portfolio_pct(cost, profile.portfolio_value_usd) if cost else None
+        # Cuántas acciones caben en el límite: así el agente no tiene que calcularlo
+        max_qty = None
+        if precio and result.max_allowed_usd is not None:
+            max_qty = int(result.max_allowed_usd // precio)
         return _json(
             {
                 **result.model_dump(mode="json"),
                 "costo_estimado_usd": cost,
                 "porcentaje_del_portafolio": pct,
+                "cantidad_maxima_acciones": max_qty,
             }
         )
 

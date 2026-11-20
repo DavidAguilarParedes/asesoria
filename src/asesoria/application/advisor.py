@@ -27,6 +27,41 @@ OFF_TOPIC_REPLY = (
 
 UsageCallback = Callable[[dict], None]
 
+ORDER_STATUS = {
+    "accepted": "aceptada",
+    "new": "recibida",
+    "pending_new": "recibida",
+    "filled": "ejecutada",
+    "partially_filled": "ejecutada en parte",
+    "rejected": "rechazada",
+}
+
+
+def order_confirmation(result: str) -> str | None:
+    """Confirmación de una orden aprobada, armada con lo que respondió Alpaca."""
+    try:
+        data = json.loads(result)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if data.get("bloqueada"):
+        return f"No se envió la orden: {data.get('motivo')}."
+    order = data.get("data", data)
+    if not isinstance(order, dict) or "status" not in order:
+        return None
+    what = f"compra de {order.get('qty')} {order.get('symbol')}"
+    status = order["status"]
+    if status == "filled":
+        price = float(order.get("filled_avg_price") or 0)
+        return f"✅ Orden ejecutada: {what} a USD {price:,.2f} por acción (paper trading)."
+    if status == "rejected":
+        return f"Alpaca rechazó la orden ({what})."
+    return (
+        f"✅ Orden enviada: {what} (paper trading). Estado en Alpaca: "
+        f"{ORDER_STATUS.get(status, status)}. Es una orden a mercado: se ejecuta en cuanto "
+        "haya negociación; si la bolsa está cerrada, en la próxima apertura "
+        "(lunes a viernes, 9:30 a.m. hora de Nueva York)."
+    )
+
 
 class PendingOrder(BaseModel):
     approval_id: str
@@ -194,4 +229,9 @@ class AdvisorService:
         if not approved:
             # Sin este aviso el modelo a veces vuelve a ofrecer la misma orden
             contents.append("Cancelo la orden. Confírmame en una línea que no se ejecutó.")
-        return await self._run(session_id, Message("user", contents))
+        reply = await self._run(session_id, Message("user", contents))
+        # La confirmación sale de la respuesta de Alpaca, no del texto del modelo
+        for call in reply.tool_calls:
+            if call.tool == "place_stock_order":
+                reply.text = order_confirmation(call.result) or reply.text
+        return reply

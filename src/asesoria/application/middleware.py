@@ -7,6 +7,8 @@ from pathlib import Path
 from agent_framework import ChatMiddleware, FunctionMiddleware, MiddlewareTermination
 from pydantic import BaseModel
 
+from asesoria.application import progress
+
 
 class ToolCall(BaseModel):
     at: str
@@ -46,6 +48,9 @@ class ToolTraceMiddleware(FunctionMiddleware):
     async def process(self, context, call_next) -> None:
         args = context.arguments
         arguments = args.model_dump() if hasattr(args, "model_dump") else dict(args)
+        name = context.function.name
+        call_id = id(context)  # une el aviso de inicio con el de fin (hay tools en paralelo)
+        progress.notify({"type": "tool", "id": call_id, "tool": name, "arguments": arguments})
         started = time.perf_counter()
         ok = True
         try:
@@ -66,6 +71,7 @@ class ToolTraceMiddleware(FunctionMiddleware):
                 ms=int((time.perf_counter() - started) * 1000),
                 ok=ok,
             )
+            progress.notify({"type": "tool_done", "id": call_id, "ok": ok})
             if self.sink:
                 self.sink(call)
             if self.log_path:
@@ -115,6 +121,7 @@ class ModelTimingMiddleware(ChatMiddleware):
         self.log_path = log_path
 
     async def process(self, context, call_next) -> None:
+        progress.notify({"type": "model"})
         started = time.perf_counter()
         await call_next()
         usage = getattr(context.result, "usage_details", None) or {}

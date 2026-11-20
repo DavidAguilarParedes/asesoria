@@ -132,6 +132,17 @@
   .tools summary svg.i { width: 13px; height: 13px; }
   .tools ul { margin: 8px 0 0; padding: 10px 12px 10px 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
   .tools li { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; margin: 2px 0; overflow-wrap: anywhere; }
+  .working { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .steps { list-style: none; margin: 0; padding: 0 0 0 4px; display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--muted); }
+  .steps li { display: flex; align-items: center; gap: 8px; animation: rise .3s ease both; }
+  .steps li::before { content: ""; width: 14px; height: 14px; border-radius: 50%; flex: none; box-sizing: border-box; }
+  .steps li.run::before { border: 2px solid var(--line); border-top-color: var(--accent-2); animation: spin .8s linear infinite; }
+  .steps li.ok::before { content: "✓"; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; background: var(--teal); }
+  .steps li.ok { color: var(--text); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .rise { animation: rise .45s ease both; }
+  @media (prefers-reduced-motion: reduce) { .rise, .steps li { animation: none; } .steps li.run::before { animation: none; } }
   .typing { display: inline-flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: var(--radius);
             background: var(--panel); box-shadow: var(--shadow); color: var(--muted); font-size: 13px; }
   .dots { display: inline-flex; gap: 4px; }
@@ -286,6 +297,8 @@
   .ref { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin: 0 1px; border-radius: 6px;
          background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; vertical-align: 2px; cursor: pointer; }
   .ref:hover { background: var(--accent); color: #fff; }
+  .note { font-size: 12px; color: var(--muted); }
+  .note::before { content: "· "; }
   .sources { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
   .sources b { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 650; }
   .src { display: flex; gap: 8px; align-items: baseline; border: 0; background: none; padding: 3px 6px; margin: 0 -6px; border-radius: 6px;
@@ -529,12 +542,17 @@ fitHeader();
 function renderTools(box, reply) {
   const row = el("div", "meta-row");
   box.append(row);
-  if (mlflow?.exp) {
+  if (reply.cached) {
+    // Respuesta grabada de un ejemplo: no tiene traza propia en MLflow
+    const tag = el("span", "trace-link", "Ejemplo grabado");
+    tag.title = "Respuesta real del agente, grabada con `asesoria grabar-ejemplos`";
+    row.append(tag);
+  } else if (mlflow?.exp) {
     const a = Object.assign(el("a", "trace-link"), {
       href: `${mlflow.url}/#/experiments/${mlflow.exp}/chat-sessions/${reply.session_id}`,
       target: "_blank", rel: "noopener", title: "La conversación completa con cada llamada al modelo y a las herramientas",
     });
-    a.append(icon("ext"), "Ver traza en MLflow");
+    a.append(icon("ext"), "Ver conversación en MLflow");
     row.append(a);
   }
   if (!reply.tool_calls.length && !reply.model_calls.length) return;
@@ -611,6 +629,11 @@ function renderReply(reply) {
     quick.onclick = () => sendMessage(next);
     log.append(quick);
   }
+  // La respuesta entra por partes: cada párrafo, viñeta y bloque aparece después del anterior
+  const parts = [...box.querySelectorAll(":scope > p, :scope > ul > li, :scope > .sources, :scope > .disclaimer"),
+                 ...body.querySelectorAll(".meta-row"), ...log.querySelectorAll(".order:not(.shown), .quick")];
+  parts.forEach((part, i) => { part.classList.add("rise"); part.style.animationDelay = `${i * 140}ms`; });
+  log.querySelectorAll(".order").forEach(o => o.classList.add("shown"));
   scroll();
 }
 
@@ -636,35 +659,96 @@ function botRow(name, text = null) {
   return body;
 }
 
-// Mensajes que se van mostrando mientras el agente trabaja (puede tardar varios segundos)
-const STEPS = ["Entendiendo la pregunta…", "Buscando en los documentos…", "Consultando herramientas…", "Redactando la respuesta…"];
+// Qué está haciendo el agente, en palabras simples, según la tool que usa
+function toolLabel(tool, a) {
+  const sym = a.symbols || a.symbol || a.simbolo || "";
+  const labels = {
+    perfil_cliente: "Revisando tu perfil",
+    buscar_documentos: "Buscando en los documentos",
+    calculadora_financiera: "Haciendo el cálculo",
+    validar_idoneidad: `Validando la idoneidad${sym ? " de " + sym : ""}`,
+    get_stock_snapshot: `Consultando el precio${sym ? " de " + sym : ""} en Alpaca`,
+    get_stock_latest_quote: `Consultando el precio${sym ? " de " + sym : ""} en Alpaca`,
+    get_stock_bars: `Revisando la tendencia${sym ? " de " + sym : ""}`,
+    get_news: `Leyendo noticias${sym ? " de " + sym : ""}`,
+    get_account_info: "Consultando la cuenta",
+    place_stock_order: "Preparando la orden",
+  };
+  return labels[tool] || `Usando ${tool}`;
+}
 
+// Muestra los pasos reales mientras llega la respuesta: cada tool aparece al empezar
+// y se marca con ✓ al terminar
+function progressView() {
+  const row = el("div", "row-bot"), box = el("div", "working");
+  const head = el("div", "typing"), dots = el("span", "dots");
+  dots.append(el("i"), el("i"), el("i"));
+  const label = el("span", "", "Entendiendo la pregunta…"), secs = el("span", "secs", "0 s");
+  head.append(dots, label, secs);
+  const steps = el("ul", "steps");
+  box.append(head, steps);
+  row.append(el("div", "logo bot-av", "A"), box);
+  log.append(row); scroll();
+
+  const start = Date.now(), running = {};
+  let toolsDone = 0;
+  const timer = setInterval(() => (secs.textContent = `${Math.floor((Date.now() - start) / 1000)} s`), 1000);
+  const onEvent = (ev) => {
+    if (ev.type === "tool") {
+      const li = el("li", "run", toolLabel(ev.tool, ev.arguments || {}));
+      running[ev.id] = li;
+      steps.append(li);
+      label.textContent = li.textContent + "…";
+    } else if (ev.type === "tool_done") {
+      // Si una tool falla el agente suele reintentar: el paso se quita para no confundir
+      if (ev.ok) running[ev.id]?.classList.replace("run", "ok");
+      else running[ev.id]?.remove();
+      toolsDone++;
+    } else if (ev.type === "model") {
+      label.textContent = toolsDone ? "Analizando los resultados…" : "Entendiendo la pregunta…";
+    }
+    scroll();
+  };
+  const close = () => { clearInterval(timer); row.remove(); };
+  return { onEvent, close };
+}
+
+// Lee la respuesta de /chat/stream: una línea JSON por aviso y la última trae la respuesta
+async function postStream(body, onEvent) {
+  const r = await fetch("/chat/stream", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) { const data = await r.json(); throw new Error(data.detail || r.statusText); }
+  const reader = r.body.getReader(), decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let i;
+    while ((i = buffer.indexOf("\n")) >= 0) {
+      const ev = JSON.parse(buffer.slice(0, i));
+      buffer = buffer.slice(i + 1);
+      if (ev.type === "reply") return ev.reply;
+      if (ev.type === "error") throw new Error(ev.detail);
+      onEvent(ev);
+    }
+  }
+  throw new Error("La conexión se cortó antes de la respuesta");
+}
+
+// fn recibe onEvent para ir mostrando los pasos (si los hay)
 async function call(fn) {
   send.disabled = true;
-  const row = el("div", "row-bot");
-  const typing = el("div", "typing");
-  const dots = el("span", "dots");
-  dots.append(el("i"), el("i"), el("i"));
-  const label = el("span", "", STEPS[0]), secs = el("span", "secs", "0 s");
-  typing.append(dots, label, secs);
-  row.append(el("div", "logo bot-av", "A"), typing);
-  log.append(row); scroll();
-  const start = Date.now();
-  const timer = setInterval(() => {
-    const s = Math.floor((Date.now() - start) / 1000);
-    secs.textContent = `${s} s`;
-    label.textContent = STEPS[Math.min(Math.floor(s / 4), STEPS.length - 1)];
-  }, 1000);
-  try { renderReply(await fn()); }
-  catch (e) { botRow("AsesorIA").append(el("div", "msg error", "No pude completar la consulta: " + e.message)); }
-  finally { clearInterval(timer); row.remove(); send.disabled = false; input.focus(); scroll(); }
+  const view = progressView();
+  try { const reply = await fn(view.onEvent); view.close(); renderReply(reply); }
+  catch (e) { view.close(); botRow("AsesorIA").append(el("div", "msg error", "No pude completar la consulta: " + e.message)); }
+  finally { send.disabled = false; input.focus(); scroll(); }
 }
 
 async function sendMessage(message) {
   log.querySelector(".welcome")?.remove();
   log.querySelectorAll(".quick").forEach(b => b.remove());
   log.append(el("div", "msg user", message));
-  await call(() => post("/chat", { message, session_id: sessionId, client_id: clientSel.value || null }));
+  await call((onEvent) => postStream({ message, session_id: sessionId, client_id: clientSel.value || null }, onEvent));
 }
 
 $("form").onsubmit = (ev) => {
@@ -680,10 +764,10 @@ $("form").onsubmit = (ev) => {
 const EXAMPLES = [
   ["Documentos con citas", "doc", [
     { q: "¿Qué relación tiene Microsoft con OpenAI?", client: "c-002", hint: "Reporte anual 10-K" },
-    { q: "¿Puede invertir en TLT?", client: "c-001", hint: "Perfil conservador y políticas" },
+    { q: "¿Puedo invertir en TLT?", client: "c-001", hint: "Perfil conservador y políticas" },
   ]],
   ["Mercado e idoneidad", "chart", [
-    { q: "¿Le conviene comprar NVDA hoy?", client: "c-002", hint: "Perfil, límites y precio en vivo" },
+    { q: "¿Me conviene comprar NVDA hoy?", client: "c-002", hint: "Perfil, límites y precio en vivo" },
   ]],
   ["Órdenes con aprobación", "check", [
     { q: "Compra 2 acciones de AAPL", client: "c-003", hint: "Tarjeta para aprobar" },
@@ -733,7 +817,7 @@ function renderWelcome() {
   const feats = el("div", "features");
   const items = [
     ["doc", "Documentos con citas", "10-K, fact sheets, guías de la SEC y políticas internas.", EXAMPLES[0][2][0]],
-    ["chart", "Mercado en vivo", "Precio en vivo desde Alpaca, contrastado con el perfil del cliente.", EXAMPLES[1][2][0]],
+    ["chart", "Mercado en vivo", "Precio en vivo desde Alpaca, contrastado con tu perfil.", EXAMPLES[1][2][0]],
     ["check", "Órdenes con aprobación", "Nada se ejecuta sin tu clic en Aprobar.", EXAMPLES[2][2][0]],
   ];
   for (const [ic, title, text, ex] of items) {
@@ -1157,7 +1241,11 @@ function renderRich(box, text) {
   const citation = (inside, frag, space) => {
     const parts = inside.split(/;\s*/).map(p => p.trim());
     const known = parts.map(p => ids.find(id => p.startsWith(id)));
-    if (!known.every(Boolean)) { frag.append(`${space}[${inside}]`); return; }  // no es una cita de documento
+    if (!known.every(Boolean)) {
+      // No es un documento (p. ej. la fuente de una noticia): se muestra como nota discreta
+      frag.append(space, el("span", "note", inside));
+      return;
+    }
     parts.forEach((cite, i) => {
       let n = sources.findIndex(s => s.cite === cite) + 1;
       if (!n) n = sources.push({ cite, docId: known[i] });

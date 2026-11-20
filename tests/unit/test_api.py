@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from asesoria.application import progress
 from asesoria.application.advisor import AdvisorReply, PendingOrder
 from asesoria.entrypoints.api import create_app
 from asesoria.infrastructure.clients import JsonClientRepository
@@ -35,6 +36,9 @@ class FakeAdvisor:
                 status="pending_approval",
                 pending=[order],
             )
+        # Como el middleware real: avisa qué tool está usando
+        progress.notify({"type": "tool", "id": 1, "tool": "perfil_cliente", "arguments": {}})
+        progress.notify({"type": "tool_done", "id": 1, "ok": True})
         return AdvisorReply(session_id=session_id, text=f"eco: {message}")
 
     async def approve(self, session_id, approval_id, approved):
@@ -88,6 +92,23 @@ def test_flujo_de_aprobacion(api):
 
     # La misma orden no se puede decidir dos veces
     assert api.post("/chat/approve", json=body).status_code == 404
+
+
+def test_chat_stream_envia_las_tools_y_luego_la_respuesta(api):
+    r = api.post("/chat/stream", json={"message": "hola", "client_id": "c-002"})
+    assert r.status_code == 200
+    events = [json.loads(line) for line in r.text.splitlines()]
+    assert [e["type"] for e in events] == ["tool", "tool_done", "reply"]
+    assert events[0]["tool"] == "perfil_cliente"
+    assert events[-1]["reply"]["text"] == "eco: hola"
+
+    assert api.post("/chat/stream", json={"message": "x", "session_id": "nope"}).status_code == 404
+
+
+def test_chat_stream_avisa_el_tope_de_gasto(api, advisor):
+    advisor.fail_budget = True
+    r = api.post("/chat/stream", json={"message": "hola"})
+    assert json.loads(r.text.splitlines()[-1])["type"] == "error"
 
 
 def test_tope_de_gasto_da_503(api, advisor):
@@ -170,3 +191,24 @@ def test_documentos(advisor, tmp_path, monkeypatch):
         assert api.get("/documents/guia/file").text == "<p>hola</p>"
         assert api.get("/documents/otro").status_code == 404
         assert api.get("/documents/otro/file").status_code == 404
+
+
+def test_ejemplo_grabado_se_repite_sin_llamar_al_agente(api, tmp_path, monkeypatch):
+    from asesoria.entrypoints import examples
+
+    monkeypatch.setattr(examples, "PATH", tmp_path / "ejemplos.json")
+    tool = {"type": "tool", "id": 1, "tool": "perfil_cliente", "arguments": {}, "ms": 10}
+    reply = AdvisorReply(session_id="vieja", text="grabada").model_dump()
+    example = examples.Example(client_id="c-002", question="¿Hola?", events=[tool], reply=reply)
+    examples.save([example])
+
+    r = api.post("/chat/stream", json={"message": " ¿hola? ", "client_id": "c-002"})
+    events = [json.loads(line) for line in r.text.splitlines()]
+    assert [e["type"] for e in events] == ["tool", "reply"]
+    last = events[-1]["reply"]
+    assert last["text"] == "grabada" and last["cached"] is True
+    assert last["session_id"] != "vieja"  # la sesión es nueva y real
+
+    # En una conversación ya empezada la misma pregunta va en vivo
+    r = api.post("/chat/stream", json={"message": "¿Hola?", "session_id": last["session_id"]})
+    assert json.loads(r.text.splitlines()[-1])["reply"]["text"] == "eco: ¿Hola?"
