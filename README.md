@@ -4,8 +4,19 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 
 > Proyecto de demostración para el reto técnico AI Engineer de Credicorp Capital. Nada de lo que responde el agente constituye asesoría financiera real.
 
+## 🎬 Demo
+
+[![Demo de AsesorIA: el agente prepara una orden y espera la aprobación del asesor](docs/video/vista-previa.gif)](docs/video/asesoria-demo-ensayo.mp4)
+
+**[▶ Ver el video completo (3 min)](docs/video/asesoria-demo-ensayo.mp4)**: los tres escenarios del reto, la aprobación humana de la orden, el juez en vivo, la traza en MLflow y el agente evaluador.
+
+> **Vista previa (ensayo):** el recorrido y la interfaz son los reales, pero en este video las respuestas de los escenarios 1 y 3 son simuladas (dicen "[prueba]"). La versión con el agente real y una orden ejecutada en paper trading se graba con la bolsa abierta y reemplazará este archivo.
+
+![Arquitectura de AsesorIA](docs/arquitectura.png)
+
 ## Contenido
 
+- [Demo](#-demo)
 - [Arquitectura](#arquitectura)
 - [Cómo funciona](#cómo-funciona)
 - [Base de conocimiento (RAG)](#base-de-conocimiento-rag)
@@ -21,6 +32,11 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 - [Tiempo invertido](#tiempo-invertido)
 
 ## Arquitectura
+
+![Arquitectura de AsesorIA](docs/arquitectura.png)
+
+<details>
+<summary>Versión en Mermaid (detalle de conexiones)</summary>
 
 ```mermaid
 flowchart LR
@@ -51,6 +67,8 @@ flowchart LR
     A -.trazas.-> ML[(MLflow)]
     A -.log de tools.-> L[(logs/*.jsonl)]
 ```
+
+</details>
 
 | Pieza | Tecnología |
 |---|---|
@@ -302,7 +320,9 @@ tests/unit/           tests sin red
 
 ## Evidencia de ejecución
 
-**Video de la demo:** [COMPLETAR: link al video]. Muestra los tres escenarios del reto, incluida una orden ejecutada en paper trading y su registro en el portal de Alpaca. El guion está en [docs/guion-video.md](docs/guion-video.md).
+**Video de la demo:** [docs/video/asesoria-demo-ensayo.mp4](docs/video/asesoria-demo-ensayo.mp4) (vista previa; ver la nota en [Demo](#-demo)). Lo graba `scripts/grabar_video.py` y lo monta `scripts/montar_video.py` (tarjetas, cursor, esperas aceleradas y música). El guion está en [docs/guion-video.md](docs/guion-video.md).
+
+**Métricas exportadas por el agente evaluador:** [results/eval.json](results/eval.json), [results/eval_summary.csv](results/eval_summary.csv) y [results/eval_cases.csv](results/eval_cases.csv), con el análisis de fallos en [results/analisis.md](results/analisis.md).
 
 ## Tiempo invertido
 

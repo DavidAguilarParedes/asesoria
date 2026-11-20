@@ -17,7 +17,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 SPEED = 4  # las esperas del agente se ven 4 veces más rápido
 RATE = 44100
-FONTS = ["/mnt/c/Windows/Fonts/segoeuib.ttf", "C:/Windows/Fonts/segoeuib.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
+FONTS = [
+    "/mnt/c/Windows/Fonts/segoeuib.ttf",
+    "C:/Windows/Fonts/segoeuib.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+]
 
 
 def segments(duration: float, waits: list[list[float]]) -> list[tuple[float, float, bool]]:
@@ -70,10 +74,36 @@ def speed_up(video: Path, parts, out: Path) -> None:
             filters.append(f"[0:v]trim={start}:{end},setpts=PTS-STARTPTS[v{i}]")
         labels.append(f"[v{i}]")
     graph = ";".join(filters) + ";" + "".join(labels) + f"concat=n={len(parts)}:v=1:a=0[v]"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(video), "-loop", "1", "-i", str(tag),
-                    "-filter_complex", graph,
-                    "-map", "[v]", "-c:v", "libx264", "-preset", "medium", "-crf", "20",
-                    "-pix_fmt", "yuv420p", "-r", "30", str(out)], check=True)
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(video),
+            "-loop",
+            "1",
+            "-i",
+            str(tag),
+            "-filter_complex",
+            graph,
+            "-map",
+            "[v]",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-crf",
+            "20",
+            "-pix_fmt",
+            "yuv420p",
+            "-r",
+            "30",
+            str(out),
+        ],
+        check=True,
+    )
 
 
 def note(freq: float, seconds: float) -> np.ndarray:
@@ -88,17 +118,19 @@ def note(freq: float, seconds: float) -> np.ndarray:
 
 def music(seconds: float, path: Path) -> None:
     """Acordes ambientales (Cmaj9 – Am9 – Fmaj9 – G6) que se superponen suavemente."""
-    chords = [[130.81, 196.00, 246.94, 293.66, 329.63],   # Cmaj9
-              [110.00, 164.81, 196.00, 246.94, 261.63],   # Am9
-              [87.31, 174.61, 220.00, 261.63, 329.63],    # Fmaj9
-              [98.00, 196.00, 246.94, 293.66, 329.63]]    # G6
+    chords = [
+        [130.81, 196.00, 246.94, 293.66, 329.63],  # Cmaj9
+        [110.00, 164.81, 196.00, 246.94, 261.63],  # Am9
+        [87.31, 174.61, 220.00, 261.63, 329.63],  # Fmaj9
+        [98.00, 196.00, 246.94, 293.66, 329.63],
+    ]  # G6
     step, length = 6.0, 8.5  # cada acorde dura 8.5 s y empieza 6 s después del anterior
     total = np.zeros(int((seconds + length) * RATE))
     i = 0
     while i * step < seconds:
         chord = sum(note(f, length) for f in chords[i % len(chords)])
         a = int(i * step * RATE)
-        total[a:a + len(chord)] += chord
+        total[a : a + len(chord)] += chord
         i += 1
     total = total[: int(seconds * RATE)]
     # Eco suave para darle espacio
@@ -127,8 +159,27 @@ def main(folder: Path) -> Path:
     track = folder / "musica.wav"
     music(seconds, track)
     final = folder / "asesoria-demo.mp4"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(silent), "-i", str(track),
-                    "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", str(final)], check=True)
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-i",
+            str(silent),
+            "-i",
+            str(track),
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "160k",
+            "-shortest",
+            str(final),
+        ],
+        check=True,
+    )
     fast = sum(e - s for s, e, f in parts if f)
     print(f"{final} · {seconds:.0f} s (se aceleraron {fast:.0f} s de espera)")
     return final
