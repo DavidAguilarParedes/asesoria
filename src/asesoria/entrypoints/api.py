@@ -157,7 +157,11 @@ def create_app(advisor=None, clients=None, chunks=None) -> FastAPI:
         from asesoria.config import get_settings
 
         settings = get_settings()
-        return {"mlflow_ui_url": settings.mlflow_ui_url if settings.mlflow_tracking_uri else None}
+        from asesoria.infrastructure.observability import experiment_id
+
+        if not settings.mlflow_tracking_uri:
+            return {"mlflow_ui_url": None, "mlflow_experiment_id": None}
+        return {"mlflow_ui_url": settings.mlflow_ui_url, "mlflow_experiment_id": experiment_id()}
 
     @app.get("/eval")
     def evaluation() -> dict:

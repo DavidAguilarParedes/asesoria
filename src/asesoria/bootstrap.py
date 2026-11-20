@@ -219,7 +219,9 @@ class Container:
         relevance = (
             LLMRelevanceChecker(self.llm, self.settings.openai_fast_model) if guard else None
         )
-        return AdvisorService(
+        from asesoria.infrastructure.observability import TracedAdvisor
+
+        advisor = AdvisorService(
             chat_client=chat,
             tools=tools,
             approved_symbols=rules.approved_symbols,
@@ -234,6 +236,8 @@ class Container:
                 "allow_multiple_tool_calls": True,
             },
         )
+        # Cada turno queda como una traza en MLflow (si está configurado)
+        return TracedAdvisor(advisor)
 
     def alpaca(self):
         from asesoria.infrastructure.mcp_alpaca import alpaca_mcp
