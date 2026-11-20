@@ -1,5 +1,17 @@
 # Guion del video de demostración
 
+## Grabación automática
+
+`scripts/grabar_video.py` recorre este guion solo, con subtítulos en pantalla, y graba el video con Playwright y el Edge instalado. Con la app corriendo y **la bolsa abierta**, desde PowerShell en Windows:
+
+```powershell
+uv run --no-project --with playwright python \\wsl.localhost\Ubuntu\home\david\dev\asesoria\scripts\grabar_video.py --out $HOME\Videos\asesoria
+```
+
+El video queda en `Videos\asesoria` en formato `.webm`, que YouTube y Google Drive aceptan. Llama al agente real: cuesta unos USD 0.04 de API.
+
+## Grabación manual
+
 Duración sugerida: 4 a 5 minutos. Graba la pantalla completa con el navegador a 1440 px o más de ancho.
 
 ## Antes de grabar
