@@ -16,5 +16,8 @@ wheels/
 # Datos generados
 data/raw/
 .qdrant/
-logs/
-.cache/
+# Las carpetas van vacías en el repo: si Docker las crea, quedan como root y la app no puede escribir
+logs/*
+!logs/.gitkeep
+.cache/*
+!.cache/.gitkeep
