@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     openai_chat_model: str = "gpt-5-mini"
     openai_fast_model: str = "gpt-5-nano"
+    # Juez en vivo: de otra familia que el asesor, para no calificarse a sí mismo
+    judge_model: str = "gpt-4.1-mini"
     openai_embedding_model: str = "text-embedding-3-small"
     max_usd_per_run: float = 0.30
     agent_reasoning_effort: str = "low"

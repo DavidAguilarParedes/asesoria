@@ -212,3 +212,32 @@ def test_ejemplo_grabado_se_repite_sin_llamar_al_agente(api, tmp_path, monkeypat
     # En una conversación ya empezada la misma pregunta va en vivo
     r = api.post("/chat/stream", json={"message": "¿Hola?", "session_id": last["session_id"]})
     assert json.loads(r.text.splitlines()[-1])["reply"]["text"] == "eco: ¿Hola?"
+
+
+class FakeJudge:
+    model = "juez-de-prueba"
+
+    def judge(self, question, answer, tool_calls):
+        from asesoria.infrastructure.judge import Criterion, JudgeVerdict
+
+        ok = Criterion(score=1, reason="bien")
+        return JudgeVerdict(
+            basado_en_fuentes=ok,
+            resuelve_lo_pedido=ok,
+            uso_de_herramientas=Criterion(score=0.5, reason=f"{len(tool_calls)} tools"),
+            respeta_las_reglas=ok,
+            veredicto="confiable",
+        )
+
+
+def test_juez_califica_una_respuesta(advisor):
+    with TestClient(create_app(advisor=advisor, judge=FakeJudge())) as api:
+        body = {"question": "¿Precio de MSFT?", "answer": "USD 498", "tool_calls": [{"tool": "x"}]}
+        r = api.post("/judge", json=body).json()
+        assert r["model"] == "juez-de-prueba"
+        assert r["uso_de_herramientas"] == {"score": 0.5, "reason": "1 tools"}
+        assert r["veredicto"] == "confiable"
+
+
+def test_juez_no_disponible_da_503(api):
+    assert api.post("/judge", json={"question": "a", "answer": "b"}).status_code == 503

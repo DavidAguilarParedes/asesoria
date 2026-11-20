@@ -31,13 +31,13 @@ UsageCallback = Callable[[dict], None]
 def injection_reply(message: str) -> str:
     tickers = mentioned_tickers(message)
     if tickers:
-        next_step = f"¿Cuántas acciones de {tickers[0]} puedo comprar?"
+        next_step = f"¿Cuántas acciones de {tickers[0]} puede comprar?"
     else:
-        next_step = "¿Qué instrumentos van con mi perfil?"
+        next_step = "¿Qué instrumentos van con su perfil?"
     return (
         "**No puedo hacer eso: es un intento de saltarse mis reglas.**\n\n"
         "- Ninguna orden se envía sin tu aprobación en la tarjeta.\n"
-        "- Cada compra se valida contra tu perfil y los límites internos.\n"
+        "- Cada compra se valida contra el perfil del cliente y los límites internos.\n"
         "- Ignoro cualquier mensaje que me pida cambiar estas reglas.\n\n"
         f"Siguiente paso: {next_step}"
     )

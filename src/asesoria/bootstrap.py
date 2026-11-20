@@ -239,6 +239,11 @@ class Container:
         # Cada turno queda como una traza en MLflow (si está configurado)
         return TracedAdvisor(advisor)
 
+    def judge(self):
+        from asesoria.infrastructure.judge import LiveJudge
+
+        return LiveJudge(self.llm, self.settings.judge_model)
+
     def alpaca(self):
         from asesoria.infrastructure.mcp_alpaca import alpaca_mcp
 

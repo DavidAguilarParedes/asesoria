@@ -105,16 +105,19 @@ class LLM:
         return answer
 
     def parse(
-        self, model: str, system: str, user: str, schema: type[T], effort: str = "minimal"
+        self, model: str, system: str, user: str, schema: type[T], effort: str | None = "minimal"
     ) -> T:
-        key = self._key("parse", model, effort, schema.__name__, system, user)
+        """effort=None para modelos sin razonamiento (por ejemplo gpt-4.1-mini)."""
+        key = self._key("parse", model, str(effort or "t0"), schema.__name__, system, user)
         if (hit := self._cached(key)) is not None:
             return schema.model_validate_json(hit)
+        # Los modelos sin razonamiento van con temperatura 0: misma entrada, misma salida
+        options = {"reasoning_effort": effort} if effort else {"temperature": 0}
         resp = self.client.chat.completions.parse(
             model=model,
-            reasoning_effort=effort,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
             response_format=schema,
+            **options,
         )
         self._track(model, resp.usage)
         parsed = resp.choices[0].message.parsed

@@ -54,7 +54,24 @@
   .hlink svg.i { width: 15px; height: 15px; }
 
   /* Chat: barra lateral oscura + conversación */
-  #chat { display: grid; grid-template-columns: 320px minmax(0, 1fr); height: calc(100dvh - var(--hdr, 57px)); }
+  #chat { display: grid; grid-template-columns: 320px minmax(0, 1fr); height: calc(100dvh - var(--hdr, 57px)); position: relative; }
+  #chat.judging { grid-template-columns: 320px minmax(0, 1fr) 400px; }
+  .judge-pane { display: none; background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; min-height: 0; }
+  .judge-pane.open { display: flex; flex-direction: column; animation: slide .25s ease; }
+  @keyframes slide { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .jp-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--line);
+             position: sticky; top: 0; background: var(--panel); z-index: 1; font-size: 15px; }
+  .jp-head b::before { content: "⚖ "; color: var(--navy-2); }
+  .jp-head button { border: 0; background: none; font-size: 16px; color: var(--muted); padding: 4px 8px; border-radius: 8px; }
+  .jp-head button:hover { background: var(--bg); color: var(--text); }
+  .jp-body { padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .jp-q { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--bg); font-size: 13.5px; }
+  .jp-q small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 650; }
+  .bot-body.judged .msg { box-shadow: 0 0 0 2px var(--navy-2), var(--shadow); }
+  @media (max-width: 1200px) {
+    #chat.judging { grid-template-columns: 320px minmax(0, 1fr); }
+    .judge-pane.open { position: absolute; inset: 0 0 0 auto; width: min(400px, 92vw); z-index: 6; box-shadow: -10px 0 40px rgba(0, 0, 0, .18); }
+  }
   .side { background: var(--navy); color: #e8edf5; overflow-y: auto; padding: 18px 16px 24px; }
   .side::-webkit-scrollbar { width: 8px; }
   .side::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); border-radius: 8px; }
@@ -121,6 +138,29 @@
   .msg.error { color: var(--no); background: var(--no-soft); box-shadow: none; }
   .meta-row { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; margin-top: 8px; }
   .meta-row .tools { margin-top: 0; }
+  .judge-btn { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; font-size: 12px;
+               font-weight: 650; border: 0; color: #fff; background: var(--navy-2); }
+  .judge-btn:hover:not(:disabled) { background: var(--navy); }
+  .judge-btn svg.i { width: 14px; height: 14px; }
+  .judge-wait { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+  .j-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; }
+  .j-row .j-bar { grid-column: 1 / -1; }
+  .j-name { font-size: 13px; font-weight: 600; }
+  .j-bar { height: 8px; border-radius: 99px; background: #edf0f0; overflow: hidden; }
+  .j-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--teal); transition: width .8s ease; }
+  .j-row.mid .j-bar i { background: #d99a1e; } .j-row.bad .j-bar i { background: var(--no); }
+  .j-score { font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  .j-reason { grid-column: 1 / -1; margin: 0 0 2px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  .j-verdict { padding: 12px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.45; border: 1px solid; }
+  .j-verdict.good { background: var(--ok-soft); border-color: #bfe1d1; }
+  .j-verdict.mid { background: #fff6e5; border-color: #f2d7a3; }
+  .j-verdict.bad { background: var(--no-soft); border-color: #f1c4bf; }
+  .j-verdict p { margin: 6px 0 0; color: var(--text); }
+  .j-label { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .j-label b { font-size: 17px; }
+  .j-verdict.good b { color: var(--ok); } .j-verdict.mid b { color: #9a6400; } .j-verdict.bad b { color: var(--no); }
+  .j-label small { font-size: 12px; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .j-bar i { transition: none; } }
   .trace-link { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px;
                 background: var(--panel); border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
   .trace-link:hover { border-color: var(--accent); color: var(--accent); }
@@ -229,6 +269,8 @@
   tr:last-child td { border-bottom: 0; }
   th { font-size: 11.5px; color: var(--muted); font-weight: 650; text-transform: uppercase; letter-spacing: .04em; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  #cases td:last-child { white-space: normal; min-width: 180px; color: var(--no); font-size: 12.5px; }
+  #cases th, #groups th { white-space: normal; vertical-align: bottom; }
   td.bad { color: var(--no); font-weight: 650; }
   td.good { color: var(--ok); }
   tr.click { cursor: pointer; }
@@ -361,6 +403,18 @@
   details.tech[open] > summary::before { transform: rotate(90deg); }
   details.tech > summary:hover { color: var(--text); border-color: var(--accent); }
   details.tech > div { margin-top: 26px; }
+  .try-judge { margin: -8px 0 18px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
+               font-size: 13.5px; border: 1px solid #f6cfc6; }
+  .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 6px; counter-reset: s; }
+  .step { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px;
+          box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; }
+  .step:not(:last-child)::after { content: "→"; position: absolute; right: -11px; top: 50%; transform: translateY(-50%);
+          color: var(--accent-2); font-weight: 800; background: var(--bg); line-height: 1; padding: 2px 0; }
+  .step .num { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800;
+               color: #fff; background: var(--accent-2); margin-bottom: 4px; }
+  .step b { font-size: 14.5px; }
+  .step span:not(.num) { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  @media (max-width: 860px) { .flow { grid-template-columns: 1fr 1fr; } .step::after { display: none; } }
   .card .help { font-size: 12px; color: var(--muted); line-height: 1.35; margin-top: 8px; min-height: 32px; }
   .meter { height: 6px; border-radius: 99px; background: #edf0f4; margin-top: 10px; overflow: hidden; }
   .meter i { display: block; height: 100%; border-radius: 99px; background: var(--teal); }
@@ -426,6 +480,10 @@
       <p class="hint">Enter para enviar · Shift+Enter para otra línea · Las órdenes siempre esperan tu aprobación</p>
     </form>
   </div>
+  <aside class="judge-pane" id="judge-pane" aria-label="Dictamen del juez">
+    <div class="jp-head"><b>Dictamen del juez</b><button id="jp-close" type="button" aria-label="Cerrar">✕</button></div>
+    <div class="jp-body" id="jp-body"></div>
+  </aside>
 </section>
 
 <!-- ===== Documentos ===== -->
@@ -442,39 +500,54 @@
 <section id="eval" class="hidden">
   <main>
     <div>
-      <h2 class="big">¿Qué tan bien funciona el asesor?</h2>
+      <h2 class="big">Agente evaluador</h2>
       <p class="sub" id="eval-sub">Cargando…</p>
+      <div class="flow">
+        <div class="step"><span class="num">1</span><b>54 casos de prueba</b>
+          <span>41 escritos a mano y 13 generados con Ragas: preguntas, casos sin evidencia y de comportamiento.</span></div>
+        <div class="step"><span class="num">2</span><b>El asesor responde</b>
+          <span>Cada caso es una conversación real con el agente y sus herramientas. Las órdenes se rechazan: nunca ejecuta.</span></div>
+        <div class="step"><span class="num">3</span><b>Un juez lo califica</b>
+          <span>Un modelo de otra familia (gpt-4o-mini y gpt-4.1-mini) revisa la conversación con Ragas: LLM-as-a-judge.</span></div>
+        <div class="step"><span class="num">4</span><b>Resultados</b>
+          <span>Notas por caso en JSON, CSV y MLflow, y un análisis de los fallos.</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="try-judge">⚖ <b>Pruébalo en vivo:</b> en el Chat, cada respuesta del asesor tiene el botón
+        <b>Evaluar con el juez</b>, que la califica al instante con su motivo.</div>
+      <h2 class="big">Las 5 métricas del juez</h2>
       <div class="cards" id="cards"></div>
     </div>
     <div>
-      <h2 class="big">¿Cómo elegimos la búsqueda en documentos?</h2>
-      <p class="sub">Probamos 10 formas de buscar; estas son las principales. Cada barra es el % de preguntas en que el fragmento correcto quedó entre los 5 primeros.
-        Usamos <b>Híbrida + reordenador</b>: con las búsquedas reales del agente llega a 90%, sin costo extra ni reindexar.</p>
-      <div class="panel" id="ablation-chart"></div>
+      <h2 class="big">Por tipo de caso</h2>
+      <div class="panel"><table id="groups"></table></div>
+    </div>
+    <div>
+      <h2 class="big">Los 54 casos</h2>
+      <p class="sub">Haz clic en un caso para ver la conversación y sus notas.</p>
+      <div class="filters">
+        <label><input type="checkbox" id="only-failed"> Solo los que fallan</label>
+        <input type="search" id="search" placeholder="Buscar por id o tipo…">
+        <span class="sub" id="count"></span>
+      </div>
+      <div class="panel"><table id="cases"></table></div>
     </div>
     <details class="tech">
-      <summary>Detalle técnico: métricas por grupo, los 54 casos, ablación y análisis de fallos</summary>
+      <summary>Análisis de los fallos</summary>
+      <div><div class="panel md" id="analysis"></div></div>
+    </details>
+    <details class="tech">
+      <summary>Anexo: métricas del RAG (búsqueda en documentos)</summary>
       <div>
-        <h2>Por grupo</h2>
-        <div class="panel"><table id="groups"></table></div>
+        <h2>¿Cómo elegimos la búsqueda?</h2>
+        <p class="sub">Cada barra es el % de preguntas en que el fragmento correcto quedó entre los 5 primeros (Hit@5).
+          Se usa <b>Híbrida + reordenador</b>: con las búsquedas reales del agente llega a 90%, sin reindexar.</p>
+        <div class="panel" id="ablation-chart"></div>
       </div>
       <div>
-        <h2>Casos</h2>
-        <div class="filters">
-          <label><input type="checkbox" id="only-failed"> Solo los que fallan</label>
-          <input type="search" id="search" placeholder="Buscar por id o tipo…">
-          <span class="sub" id="count"></span>
-        </div>
-        <div class="panel"><table id="cases"></table></div>
-      </div>
-      <div>
-        <h2>Ablación del RAG</h2>
-        <p class="sub">Pregunta en español, sin filtros. Hit@5: el chunk correcto aparece entre los 5 primeros.</p>
+        <h2>Las 10 configuraciones</h2>
         <div class="panel"><table id="ablation"></table></div>
-      </div>
-      <div>
-        <h2>Análisis del agente intérprete</h2>
-        <div class="panel md" id="analysis"></div>
       </div>
     </details>
   </main>
@@ -516,6 +589,7 @@ const ICONS = {
   ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+  scale: '<path d="M12 3v18M8 21h8M4 7h16M4 7l-3 7a3 3 0 0 0 6 0zM20 7l-3 7a3 3 0 0 0 6 0z"/>',
 };
 function icon(name) {
   const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -572,9 +646,16 @@ function fitHeader() { document.documentElement.style.setProperty("--hdr", docum
 window.addEventListener("resize", fitHeader);
 fitHeader();
 
-function renderTools(box, reply) {
+function renderTools(box, reply, question) {
   const row = el("div", "meta-row");
   box.append(row);
+  if (question && reply.text) {
+    const b = el("button", "judge-btn");
+    b.type = "button";
+    b.append(icon("scale"), "Evaluar con el juez");
+    b.onclick = () => runJudge(b, question, reply);
+    row.append(b);
+  }
   if (reply.cached) {
     // Respuesta grabada de un ejemplo: no tiene traza propia en MLflow
     const tag = el("span", "trace-link", "Ejemplo grabado");
@@ -637,7 +718,8 @@ function renderOrder(order) {
     const done = el("span", "done " + (approved ? "ok" : "no"));
     done.append(icon(approved ? "check" : "x"), approved ? "Aprobaste la orden" : "Rechazaste la orden");
     actions.replaceChildren(done);
-    await call(() => post("/chat/approve", { session_id: sessionId, approval_id: order.approval_id, approved }));
+    await call(() => post("/chat/approve", { session_id: sessionId, approval_id: order.approval_id, approved }),
+               approved ? "Apruebo la orden" : "Rechazo la orden");
   };
   yes.onclick = () => decide(true);
   no.onclick = () => decide(false);
@@ -646,7 +728,7 @@ function renderOrder(order) {
   log.append(card);
 }
 
-function renderReply(reply) {
+function renderReply(reply, question = null) {
   sessionId = reply.session_id;
   log.querySelector(".welcome")?.remove();
   const box = el("div", "msg rich" + (reply.status === "blocked" ? " blocked" : ""));
@@ -654,7 +736,7 @@ function renderReply(reply) {
   const body = botRow(reply.status === "blocked" ? "AsesorIA · solicitud bloqueada" : "AsesorIA", reply.text);
   body.append(box);
   renderWidgets(body, reply);
-  renderTools(body, reply);
+  renderTools(body, reply, question);
   reply.pending.forEach(renderOrder);
   if (next && !reply.pending.length) {
     const quick = el("button", "quick");
@@ -756,7 +838,7 @@ function suitabilityCards(calls) {
     if (!d) return null;
     const card = el("div", "w suit " + (d.approved ? "ok" : "no"));
     const head = el("div", "w-head");
-    head.append(el("b", "", `Idoneidad · ${a.simbolo}`), el("span", "verdict", d.approved ? "✓ Apto" : "✗ No apto"));
+    head.append(el("b", "", `Idoneidad · ${a.simbolo}`), el("span", "verdict", d.approved ? "✓ Apto para el cliente" : "✗ No apto"));
     card.append(head);
     if (d.max_allowed_usd && d.costo_estimado_usd) {
       const used = Math.min(d.costo_estimado_usd / d.max_allowed_usd, 1);
@@ -765,7 +847,7 @@ function suitabilityCards(calls) {
       meter.append(fill);
       card.append(el("div", "w-line", `${usd(d.costo_estimado_usd)} de ${usd(d.max_allowed_usd)} permitidos`), meter);
       const facts = [`${a.cantidad} ${a.cantidad === 1 ? "acción" : "acciones"}`];
-      if (d.porcentaje_del_portafolio != null) facts.push(`${d.porcentaje_del_portafolio}% de tu portafolio`);
+      if (d.porcentaje_del_portafolio != null) facts.push(`${d.porcentaje_del_portafolio}% del portafolio`);
       if (d.cantidad_maxima_acciones != null) facts.push(`máximo ${d.cantidad_maxima_acciones}`);
       card.append(el("div", "w-foot", facts.join(" · ")));
     } else if (d.detail) {
@@ -806,7 +888,7 @@ function profileCard(calls) {
   const max = Math.max(...Object.values(d.monto_maximo_usd_por_instrumento));
   const card = el("div", "w profile");
   const head = el("div", "w-head");
-  head.append(el("b", "", `Límites de tu perfil ${d.risk_profile}`), el("span", "w-tag", `Portafolio ${usd(d.portfolio_value_usd)}`));
+  head.append(el("b", "", `Límites del perfil ${d.risk_profile}`), el("span", "w-tag", `Portafolio ${usd(d.portfolio_value_usd)}`));
   card.append(head);
   const list = el("div", "lim-list");
   for (const [sym, amount] of Object.entries(d.monto_maximo_usd_por_instrumento)) {
@@ -835,6 +917,70 @@ function renderWidgets(body, reply) {
   body.append(grid);
 }
 
+/* ---------- Juez en vivo (LLM-as-a-judge) ---------- */
+const CRITERIA = [
+  ["basado_en_fuentes", "Basado en fuentes"],
+  ["resuelve_lo_pedido", "Resuelve lo pedido"],
+  ["uso_de_herramientas", "Uso de herramientas"],
+  ["respeta_las_reglas", "Respeta las reglas"],
+];
+
+// El dictamen se muestra en el panel de la derecha; la respuesta evaluada queda marcada
+async function runJudge(button, question, reply) {
+  const pane = $("judge-pane"), box = $("jp-body");
+  document.querySelectorAll(".bot-body.judged").forEach(b => b.classList.remove("judged"));
+  button.closest(".bot-body").classList.add("judged");
+  $("chat").classList.add("judging");
+  pane.classList.add("open");
+  button.disabled = true;
+
+  const asked = el("div", "jp-q");
+  asked.append(el("small", "", "Pregunta evaluada"), el("span", "", question));
+  const tag = el("div", "w-tag", "Revisando…");
+  const wait = el("div", "judge-wait");
+  const dots = el("span", "dots");
+  dots.append(el("i"), el("i"), el("i"));
+  wait.append(dots, "Leyendo la pregunta, los datos de las herramientas y la respuesta…");
+  box.replaceChildren(asked, tag, wait);
+  try {
+    const v = await post("/judge", { question, answer: reply.text, tool_calls: reply.tool_calls });
+    wait.remove();
+    tag.textContent = `Juez: ${v.model}, de otra familia que el asesor`;
+    // Dictamen en palabras, no en porcentaje
+    const scores = CRITERIA.map(([k]) => v[k].score);
+    const passed = scores.filter(x => x >= 1).length;
+    const [label, level] = scores.some(x => x === 0) ? ["Con problemas", "bad"]
+      : passed === scores.length ? ["Aprobada", "good"] : ["Aprobada con observaciones", "mid"];
+    const verdict = el("div", "j-verdict rise " + level);
+    const title = el("div", "j-label");
+    title.append(el("b", "", label), el("small", "", `${passed} de ${scores.length} criterios cumplen`));
+    verdict.append(title, el("p", "", v.veredicto));
+    box.append(verdict);
+    CRITERIA.forEach(([k, label], i) => {
+      const c = v[k];
+      const line = el("div", "j-row rise " + (c.score >= 1 ? "good" : c.score > 0 ? "mid" : "bad"));
+      line.style.animationDelay = `${(i + 1) * 160}ms`;
+      const bar = el("div", "j-bar"), fill = el("i");
+      bar.append(fill);
+      line.append(el("span", "j-name", label), el("b", "j-score", c.score.toFixed(1)), bar, el("p", "j-reason", c.reason));
+      box.append(line);
+      setTimeout(() => (fill.style.width = `${c.score * 100}%`), 200 + i * 160);
+    });
+    button.replaceChildren(icon("scale"), `Juez: ${label}`);
+  } catch (e) {
+    wait.replaceChildren("El juez no pudo evaluar: " + e.message);
+  }
+  button.disabled = false;
+}
+
+function closeJudge() {
+  $("judge-pane").classList.remove("open");
+  $("chat").classList.remove("judging");
+  document.querySelectorAll(".bot-body.judged").forEach(b => b.classList.remove("judged"));
+}
+$("jp-close").onclick = closeJudge;
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeJudge(); });
+
 // Fila del asesor: avatar a la izquierda, nombre y contenido a la derecha
 // Si se pasa "text", la fila trae un botón para copiar la respuesta
 function botRow(name, text = null) {
@@ -861,7 +1007,7 @@ function botRow(name, text = null) {
 function toolLabel(tool, a) {
   const sym = a.symbols || a.symbol || a.simbolo || "";
   const labels = {
-    perfil_cliente: "Revisando tu perfil",
+    perfil_cliente: "Revisando el perfil del cliente",
     buscar_documentos: "Buscando en los documentos",
     calculadora_financiera: "Haciendo el cálculo",
     validar_idoneidad: `Validando la idoneidad${sym ? " de " + sym : ""}`,
@@ -934,10 +1080,11 @@ async function postStream(body, onEvent) {
 }
 
 // fn recibe onEvent para ir mostrando los pasos (si los hay)
-async function call(fn) {
+// question: el mensaje del usuario, para que el juez pueda evaluar la respuesta
+async function call(fn, question = null) {
   send.disabled = true;
   const view = progressView();
-  try { const reply = await fn(view.onEvent); view.close(); renderReply(reply); }
+  try { const reply = await fn(view.onEvent); view.close(); renderReply(reply, question); }
   catch (e) { view.close(); botRow("AsesorIA").append(el("div", "msg error", "No pude completar la consulta: " + e.message)); }
   finally { send.disabled = false; input.focus(); scroll(); }
 }
@@ -946,7 +1093,7 @@ async function sendMessage(message) {
   log.querySelector(".welcome")?.remove();
   log.querySelectorAll(".quick").forEach(b => b.remove());
   log.append(el("div", "msg user", message));
-  await call((onEvent) => postStream({ message, session_id: sessionId, client_id: clientSel.value || null }, onEvent));
+  await call((onEvent) => postStream({ message, session_id: sessionId, client_id: clientSel.value || null }, onEvent), message);
 }
 
 $("form").onsubmit = (ev) => {
@@ -961,14 +1108,15 @@ $("form").onsubmit = (ev) => {
 /* Ejemplos para probar con un clic (casos del set de evaluación) */
 const EXAMPLES = [
   ["Documentos con citas", "doc", [
-    { q: "¿Qué relación tiene Microsoft con OpenAI?", client: "c-002", hint: "Reporte anual 10-K" },
-    { q: "¿Puedo invertir en TLT?", client: "c-001", hint: "Perfil conservador y políticas" },
+    { q: "¿Qué riesgos menciona Apple en su último reporte anual?", client: "c-002", hint: "Escenario 1 · 10-K de Apple" },
+    { q: "¿Puede invertir en TLT?", client: "c-001", hint: "Perfil conservador y políticas" },
   ]],
   ["Mercado e idoneidad", "chart", [
-    { q: "¿Me conviene comprar NVDA hoy?", client: "c-002", hint: "Perfil, límites y precio en vivo" },
+    { q: "¿Qué oportunidades ves entre MSFT, NVDA y un ETF de bonos?", client: "c-002", hint: "Escenario 2 · Documentos + mercado + perfil" },
+    { q: "¿Le conviene comprar NVDA hoy?", client: "c-002", hint: "Precio, tendencia, noticias e idoneidad" },
   ]],
   ["Órdenes con aprobación", "check", [
-    { q: "Compra 2 acciones de AAPL", client: "c-003", hint: "Tarjeta para aprobar" },
+    { q: "Compra 5 acciones de MSFT", client: "c-003", hint: "Escenario 3 · Tarjeta para aprobar" },
     { q: "Compra 5 acciones de NVDA", client: "c-001", hint: "Se rechaza: no va con el perfil" },
   ]],
   ["Seguridad", "shield", [
@@ -1015,7 +1163,7 @@ function renderWelcome() {
   const feats = el("div", "features");
   const items = [
     ["doc", "Documentos con citas", "10-K, fact sheets, guías de la SEC y políticas internas.", EXAMPLES[0][2][0]],
-    ["chart", "Mercado en vivo", "Precio en vivo desde Alpaca, contrastado con tu perfil.", EXAMPLES[1][2][0]],
+    ["chart", "Mercado en vivo", "Precio en vivo desde Alpaca, contrastado con el perfil del cliente.", EXAMPLES[1][2][0]],
     ["check", "Órdenes con aprobación", "Nada se ejecuta sin tu clic en Aprobar.", EXAMPLES[2][2][0]],
   ];
   for (const [ic, title, text, ex] of items) {
@@ -1100,24 +1248,24 @@ async function getJson(url) {
 }
 
 function failed(row) {
-  return row.error || row.hit === false || row.failed_checks.length ||
-    METRICS.some(([k]) => row[k] !== null && row[k] < 0.5);
+  return row.error || row.failed_checks.length || METRICS.some(([k]) => row[k] !== null && row[k] < 0.5);
 }
 
 async function loadEval() {
   try {
     const data = await getJson("/eval");
     const total = data.summary.total;
-    $("eval-sub").textContent = `${total.casos} preguntas de prueba, calificadas por un modelo juez distinto al del asesor. Responde en ${total.p50_s} s (mediana).`;
+    $("eval-sub").textContent = `Un segundo agente pone a prueba al asesor y califica cada conversación. ` +
+      `${total.casos} casos, ${total.errores} errores, respuesta mediana de ${total.p50_s} s.`;
     const cards = $("cards");
-    const RAG = ["hit@5", "Hit@5", "Encuentra el documento", "El fragmento correcto está entre los 5 primeros resultados."];
-    for (const [k, tech, title, help] of [...METRICS, RAG]) {
+    for (const [k, tech, title, help] of METRICS) {
       const v = total[k];
-      const c = el("div", "card" + (k === "hit@5" ? " rag" : "") + (v < 0.5 ? " lvl-low" : v < 0.8 ? " lvl-mid" : ""));
+      const c = el("div", "card" + (v < 0.5 ? " lvl-low" : v < 0.8 ? " lvl-mid" : ""));
       const meter = el("div", "meter"), fill = el("i");
       fill.style.width = `${Math.round((v ?? 0) * 100)}%`;
       meter.append(fill);
-      c.append(el("div", "k", title), el("div", "v", `${Math.round(v * 100)}%`), meter, el("div", "help", help), el("div", "n", tech));
+      c.append(el("div", "k", title), el("div", "v", `${Math.round(v * 100)}%`), meter, el("div", "help", help),
+               el("div", "n", `${tech} · ${total["n_" + k]} casos`));
       cards.append(c);
     }
     renderGroups(data.summary);
@@ -1146,35 +1294,34 @@ function scoreCell(v) {
 
 function renderGroups(summary) {
   const t = $("groups");
-  t.append(headerRow([["Grupo"], ["Casos", 1], ...METRICS.map(([, l]) => [l, 1]), ["Hit@5", 1], ["MRR@5", 1]]));
+  t.append(headerRow([["Grupo"], ["Casos", 1], ...METRICS.map(([, , title]) => [title, 1])]));
   const rows = [["Total", summary.total]];
-  const names = { source: { curado: "Curados", ragas: "Ragas" }, hops: { single: "Single-hop", multi: "Multi-hop" },
+  const names = { source: { curado: "Escritos a mano", ragas: "Generados con Ragas" },
                   type: { rag: "Preguntas", negative: "Sin evidencia", behavior: "Comportamiento" } };
-  for (const key of ["source", "hops", "type"])
+  for (const key of ["type", "source"])
     for (const [g, v] of Object.entries(summary["por_" + key])) rows.push([names[key][g] || g, v]);
   for (const [name, v] of rows) {
     const tr = el("tr");
     tr.append(el("td", "", name), el("td", "num", v.casos));
     METRICS.forEach(([k]) => tr.append(scoreCell(v[k])));
-    tr.append(scoreCell(v["hit@5"]), scoreCell(v["mrr@5"]));
     t.append(tr);
   }
 }
+
+const CASE_TYPES = { rag: "Pregunta", negative: "Sin evidencia", behavior: "Comportamiento" };
 
 function renderCases() {
   const t = $("cases");
   const onlyFailed = $("only-failed").checked;
   const q = $("search").value.trim().toLowerCase();
   const rows = evalCases.filter(r => (!onlyFailed || failed(r)) &&
-    (!q || `${r.case_id} ${r.type} ${r.source} ${r.hops}`.toLowerCase().includes(q)));
-  t.replaceChildren(headerRow([["Caso"], ["Tipo"], ["Origen"], ["Hops"], ...METRICS.map(([, l]) => [l, 1]), ["Hit", 1], ["Falla"]]));
+    (!q || `${r.case_id} ${CASE_TYPES[r.type]} ${r.source}`.toLowerCase().includes(q)));
+  t.replaceChildren(headerRow([["Caso"], ["Tipo"], ["Origen"], ...METRICS.map(([, , title]) => [title, 1]), ["Falla"]]));
   for (const r of rows) {
     const tr = el("tr", "click");
-    tr.append(el("td", "", r.case_id), el("td", "", r.type), el("td", "", r.source), el("td", "", r.hops));
+    tr.append(el("td", "", r.case_id), el("td", "", CASE_TYPES[r.type] || r.type), el("td", "", r.source === "ragas" ? "Ragas" : "A mano"));
     METRICS.forEach(([k]) => tr.append(scoreCell(r[k])));
-    const hit = el("td", "num", r.hit === null ? "—" : r.hit ? "sí" : "no");
-    if (r.hit === false) hit.classList.add("bad");
-    tr.append(hit, el("td", "", r.failed_checks.join("; ")));
+    tr.append(el("td", "", r.failed_checks.join("; ")));
     tr.onclick = () => openCase(r.case_id);
     t.append(tr);
   }
@@ -1197,7 +1344,6 @@ async function openCase(caseId) {
       const v = d.scores[k];
       chips.append(el("span", "chip" + (v !== null && v < 0.5 ? " bad" : ""), `${label}: ${fmt(v)}`));
     }
-    if (d.scores.hit !== null) chips.append(el("span", "chip" + (d.scores.hit ? "" : " bad"), `Hit@5: ${d.scores.hit ? "sí" : "no"}`));
     d.scores.failed_checks.forEach(f => chips.append(el("span", "chip bad", f)));
     body.append(chips);
     body.append(el("div", "lbl", "Pregunta"), el("div", "box", c.question));

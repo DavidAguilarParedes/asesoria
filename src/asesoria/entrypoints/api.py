@@ -33,6 +33,12 @@ class ChatRequest(BaseModel):
     client_id: str | None = None
 
 
+class JudgeRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=4000)
+    answer: str = Field(min_length=1)
+    tool_calls: list[dict] = []
+
+
 class ApproveRequest(BaseModel):
     session_id: str
     approval_id: str
@@ -58,6 +64,7 @@ async def lifespan(app: FastAPI):
         mcp = await stack.enter_async_context(c.alpaca()) if settings.api_use_mcp else None
         app.state.advisor = c.advisor(mcp=mcp)
         app.state.clients = c.clients()
+        app.state.judge = c.judge()
         # Los chunks indexados se leen una vez para la pestaña Documentos (son pocos)
         app.state.chunks = c.store().payloads()
         try:
@@ -72,9 +79,10 @@ def _natural(chunk_id: str) -> list:
     return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", chunk_id)]
 
 
-def create_app(advisor=None, clients=None, chunks=None) -> FastAPI:
+def create_app(advisor=None, clients=None, chunks=None, judge=None) -> FastAPI:
     app = FastAPI(title="AsesorIA", lifespan=lifespan)
     app.state.advisor = advisor
+    app.state.judge = judge
     app.state.clients = clients
     app.state.chunks = chunks or []
     # Evita que dos requests de la misma sesión corran a la vez (p. ej. doble clic en aprobar)
@@ -89,7 +97,8 @@ def create_app(advisor=None, clients=None, chunks=None) -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     def index():
-        return FileResponse(STATIC / "index.html")
+        # Sin caché: el navegador siempre pide la última versión de la página
+        return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
 
     @app.get("/clients")
     def list_clients(request: Request) -> list[dict]:
@@ -255,6 +264,18 @@ def create_app(advisor=None, clients=None, chunks=None) -> FastAPI:
                 yield json.dumps(last, ensure_ascii=False) + "\n"
 
         return StreamingResponse(events(), media_type="application/x-ndjson")
+
+    @app.post("/judge")
+    def judge(body: JudgeRequest, request: Request) -> dict:
+        """El juez (otro modelo) califica una respuesta del asesor con su motivo."""
+        live_judge = request.app.state.judge
+        if live_judge is None:
+            raise HTTPException(503, "El juez no está disponible")
+        try:
+            verdict = live_judge.judge(body.question, body.answer, body.tool_calls)
+        except BudgetExceeded as e:
+            raise HTTPException(503, str(e)) from e
+        return {"model": live_judge.model, **verdict.model_dump()}
 
     @app.post("/chat/approve")
     async def approve(body: ApproveRequest, request: Request) -> AdvisorReply:
