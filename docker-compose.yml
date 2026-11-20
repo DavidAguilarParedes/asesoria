@@ -10,7 +10,7 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       MLFLOW_UI_URL: http://localhost:5000
     # Corre con tu usuario para que los archivos generados no queden como root
-    user: "${UID:-1000}:${GID:-1000}"
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
     volumes:
       - ./data:/app/data          # documentos descargados y set de evaluación
       - ./.cache:/app/.cache      # caché de embeddings y LLM (evita pagar dos veces)
