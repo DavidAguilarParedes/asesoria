@@ -241,3 +241,16 @@ def test_juez_califica_una_respuesta(advisor):
 
 def test_juez_no_disponible_da_503(api):
     assert api.post("/judge", json={"question": "a", "answer": "b"}).status_code == 503
+
+
+def test_descarga_de_resultados(api, tmp_path, monkeypatch):
+    from asesoria.entrypoints import api as module
+
+    monkeypatch.setattr(module, "RESULTS", tmp_path)
+    (tmp_path / "metricas.csv").write_text("metrica,valor\nfaithfulness,0.87\n")
+    r = api.get("/results/metricas.csv")
+    assert r.status_code == 200 and "faithfulness" in r.text
+    assert "attachment" in r.headers["content-disposition"]
+    # Solo los archivos de la lista, nada más del disco
+    assert api.get("/results/eval_runs.json").status_code == 404
+    assert api.get("/results/..%2F.env").status_code == 404

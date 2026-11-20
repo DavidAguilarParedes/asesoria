@@ -203,6 +203,16 @@ def create_app(advisor=None, clients=None, chunks=None, judge=None) -> FastAPI:
     def ablation() -> dict:
         return read_json("ablation.json")
 
+    # Archivos que exporta el agente evaluador, para descargarlos desde la página
+    DOWNLOADS = {"metricas.csv", "metricas.json", "eval_cases.csv", "eval_summary.csv", "eval.json"}
+
+    @app.get("/results/{name}")
+    def download(name: str) -> FileResponse:
+        path = RESULTS / name
+        if name not in DOWNLOADS or not path.exists():
+            raise HTTPException(404, f"No existe el archivo {name}")
+        return FileResponse(path, filename=name)
+
     @app.get("/analysis")
     def analysis() -> dict:
         path = RESULTS / "analisis.md"

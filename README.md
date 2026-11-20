@@ -80,7 +80,7 @@ En la barra lateral hay ejemplos de un clic. Los tres escenarios del reto:
 2. Cliente c-002: *¿Qué oportunidades ves entre MSFT, NVDA y un ETF de bonos?* Cruza documentos, mercado en vivo y el perfil del cliente.
 3. Cliente c-003: *Compra 5 acciones de MSFT.* Aparece la orden para aprobar; al aprobarla se envía a tu cuenta paper de Alpaca. Con la bolsa abierta (lunes a viernes, 9:30 a 16:00 hora de Nueva York) se ejecuta al momento; fuera de ese horario queda aceptada y se ejecuta en la siguiente apertura.
 
-Cada respuesta tiene el botón *Evaluar con el juez* y el enlace a su conversación en MLflow. La pestaña *Evaluación* muestra los resultados del agente evaluador.
+Cada respuesta tiene el botón *Evaluar con el juez* y el enlace a su conversación en MLflow. Las evaluaciones del juez de la sesión se exportan en CSV o JSON desde su panel. La pestaña *Evaluación* muestra los resultados del agente evaluador y permite descargar `metricas.csv`, `metricas.json` y el detalle por caso.
 
 ### 5. Correr el agente evaluador
 

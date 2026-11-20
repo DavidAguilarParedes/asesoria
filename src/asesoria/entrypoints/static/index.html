@@ -64,7 +64,13 @@
   .jp-head b::before { content: "⚖ "; color: var(--navy-2); }
   .jp-head button { border: 0; background: none; font-size: 16px; color: var(--muted); padding: 4px 8px; border-radius: 8px; }
   .jp-head button:hover { background: var(--bg); color: var(--text); }
-  .jp-body { padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .jp-body { padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .jp-export { position: sticky; bottom: 0; display: flex; align-items: center; gap: 8px; padding: 12px 18px;
+               border-top: 1px solid var(--line); background: var(--panel); font-size: 12.5px; color: var(--muted); }
+  .jp-export span { margin-right: auto; }
+  .jp-export button { white-space: nowrap; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+                      font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .jp-export button:hover { border-color: var(--accent); color: var(--accent); }
   .jp-q { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--bg); font-size: 13.5px; }
   .jp-q small { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 650; }
   .bot-body.judged .msg { box-shadow: 0 0 0 2px var(--navy-2), var(--shadow); }
@@ -403,6 +409,10 @@
   details.tech[open] > summary::before { transform: rotate(90deg); }
   details.tech > summary:hover { color: var(--text); border-color: var(--accent); }
   details.tech > div { margin-top: 26px; }
+  .downloads { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+  .downloads a { padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+                 color: var(--text); text-decoration: none; font-weight: 600; font-size: 12.5px; }
+  .downloads a:hover { border-color: var(--accent); color: var(--accent); }
   .try-judge { margin: -8px 0 18px; padding: 10px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
                font-size: 13.5px; border: 1px solid #f6cfc6; }
   .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 6px; counter-reset: s; }
@@ -483,6 +493,11 @@
   <aside class="judge-pane" id="judge-pane" aria-label="Dictamen del juez">
     <div class="jp-head"><b>Dictamen del juez</b><button id="jp-close" type="button" aria-label="Cerrar">✕</button></div>
     <div class="jp-body" id="jp-body"></div>
+    <div class="jp-export" id="jp-export">
+      <span id="jp-count"></span>
+      <button type="button" id="jp-csv">Exportar CSV</button>
+      <button type="button" id="jp-json">Exportar JSON</button>
+    </div>
   </aside>
 </section>
 
@@ -518,6 +533,12 @@
         <b>Evaluar con el juez</b>, que la califica al instante con su motivo.</div>
       <h2 class="big">Las 5 métricas del juez</h2>
       <div class="cards" id="cards"></div>
+      <div class="downloads">Descargar resultados:
+        <a href="/results/metricas.csv" download>metricas.csv</a>
+        <a href="/results/metricas.json" download>metricas.json</a>
+        <a href="/results/eval_cases.csv" download>casos (CSV)</a>
+        <a href="/results/eval_summary.csv" download>por grupo (CSV)</a>
+      </div>
     </div>
     <div>
       <h2 class="big">Por tipo de caso</h2>
@@ -967,11 +988,50 @@ async function runJudge(button, question, reply) {
       setTimeout(() => (fill.style.width = `${c.score * 100}%`), 200 + i * 160);
     });
     button.replaceChildren(icon("scale"), `Juez: ${label}`);
+    judgments.push({
+      fecha: new Date().toISOString().slice(0, 19).replace("T", " "),
+      cliente: clientSel.value || "sin cliente",
+      pregunta: question,
+      respuesta: reply.text,
+      juez: v.model,
+      dictamen: label,
+      ...Object.fromEntries(CRITERIA.flatMap(([k]) => [[k, v[k].score], [`motivo_${k}`, v[k].reason]])),
+      veredicto: v.veredicto,
+    });
+    updateExport();
   } catch (e) {
     wait.replaceChildren("El juez no pudo evaluar: " + e.message);
   }
   button.disabled = false;
 }
+
+// Evaluaciones del juez en esta sesión, para exportarlas
+const judgments = [];
+
+function updateExport() {
+  const n = judgments.length;
+  $("jp-count").textContent = `${n} ${n === 1 ? "evaluación" : "evaluaciones"} en esta sesión`;
+  $("jp-export").classList.toggle("hidden", !n);
+}
+
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function toCsv(rows) {
+  const cols = Object.keys(rows[0]);
+  const cell = (v) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+  return [cols.join(","), ...rows.map(r => cols.map(c => cell(r[c])).join(","))].join("\n");
+}
+
+const stamp = () => new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "");
+// El BOM hace que Excel lea bien las tildes
+$("jp-csv").onclick = () => download(`juez-en-vivo-${stamp()}.csv`, "\ufeff" + toCsv(judgments), "text/csv;charset=utf-8");
+$("jp-json").onclick = () => download(`juez-en-vivo-${stamp()}.json`, JSON.stringify(judgments, null, 2), "application/json");
+updateExport();
 
 function closeJudge() {
   $("judge-pane").classList.remove("open");
