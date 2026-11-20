@@ -17,6 +17,7 @@ Asistente para asesores de inversiones construido con **Microsoft Agent Framewor
 - [Variables de entorno](#variables-de-entorno)
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Decisiones y trade-offs](#decisiones-y-trade-offs)
+- [Evidencia de ejecución](#evidencia-de-ejecución)
 - [Tiempo invertido](#tiempo-invertido)
 
 ## Arquitectura
@@ -298,6 +299,10 @@ tests/unit/           tests sin red
 - **Un solo MCP (Alpaca):** cubre mercado, noticias, cuenta y órdenes. Los fundamentales salen de los 10-K y fact sheets; un segundo MCP como Alpha Vantage sería el siguiente paso.
 - **Página sin frameworks de frontend:** un solo archivo HTML, fácil de leer y sin build.
 - **Órdenes fuera de horario:** una orden a mercado aprobada con la bolsa cerrada queda *aceptada* y se ejecuta en la próxima apertura (9:30 a.m. hora de Nueva York). La confirmación lo dice tal cual.
+
+## Evidencia de ejecución
+
+**Video de la demo:** [COMPLETAR: link al video]. Muestra los tres escenarios del reto, incluida una orden ejecutada en paper trading y su registro en el portal de Alpaca. El guion está en [docs/guion-video.md](docs/guion-video.md).
 
 ## Tiempo invertido
 
